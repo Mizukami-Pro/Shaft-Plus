@@ -16,8 +16,6 @@ coroutines = "1.10.2"
 cronet = "143.7445.0"
 desugarJdkLibs = "2.1.3"
 documentFile = "1.0.1"
-firebaseAnalytics = "22.1.2"
-firebaseCrashlytics = "19.2.1"
 flexbox = "3.0.0"
 flowingDrawer = "2.1.0"
 fragment = "1.8.9"
@@ -42,7 +40,6 @@ okhttp = "4.12.0"
 onnxRuntime = "1.24.3"
 orgJson = "20231013"
 pixivLogin = "1.4.1"
-playReview = "2.0.2"
 rebound = "0.3.8"
 recyclerView = "1.3.2"
 relinker = "1.4.5"
@@ -78,6 +75,7 @@ androidxCoreBase = { module = "androidx.core:core", version.ref = "core" }
 androidxDocumentFile = { module = "androidx.documentfile:documentfile", version.ref = "documentFile" }
 androidxFragment = { module = "androidx.fragment:fragment-ktx", version.ref = "fragment" }
 androidxInterpolator = { module = "androidx.interpolator:interpolator", version.ref = "interpolator" }
+androidxLocalBroadcastManager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version = "1.1.0" }
 androidxLifecycleProcess = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycle" }
 androidxLifecycleLiveData = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycle" }
 androidxLifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
@@ -103,15 +101,12 @@ androidxLifecycleRuntimeTesting = { module = "androidx.lifecycle:lifecycle-runti
 coroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 cronet = { module = "org.chromium.net:cronet-embedded", version.ref = "cronet" }
 desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarJdkLibs" }
-firebaseAnalytics = { module = "com.google.firebase:firebase-analytics", version.ref = "firebaseAnalytics" }
-firebaseCrashlytics = { module = "com.google.firebase:firebase-crashlytics", version.ref = "firebaseCrashlytics" }
 flexbox = { module = "com.google.android.flexbox:flexbox", version.ref = "flexbox" }
 flowingDrawer = { module = "com.mxn.soul:flowingdrawer-core", version.ref = "flowingDrawer" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 glideCompiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
 glideOkhttp = { module = "com.github.bumptech.glide:okhttp3-integration", version.ref = "glide" }
 glideTransformations = { module = "jp.wasabeef:glide-transformations", version.ref = "glideTransformations" }
-googleReview = { module = "com.google.android.play:review", version.ref = "playReview" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hdImageView = { module = "xyz.zpayh:hdimageview", version.ref = "hdImageView" }
 htmlTextView = { module = "org.sufficientlysecure:html-textview", version.ref = "htmlTextView" }

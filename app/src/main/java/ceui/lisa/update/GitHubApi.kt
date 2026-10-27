@@ -38,7 +38,7 @@ interface GitHubApi {
 
     companion object {
         const val BASE_URL = "https://api.github.com/"
-        const val OWNER = "CeuiLiSA"
-        const val REPO = "Pixiv-Shaft"
+        const val OWNER = "Mizukami-Pro"
+        const val REPO = "Shaft-Plus"
     }
 }

@@ -30,7 +30,7 @@ class VersionHistoryTest {
             body = body,
             publishedAt = "2026-09-07T03:00:00Z",
             htmlUrl = "https://example.invalid/$tag",
-            assets = listOf(GitHubAsset("PixShaft_$tag.apk", size, "https://example.invalid/apk", null)),
+            assets = listOf(GitHubAsset("ShaftPlus_$tag.apk", size, "https://example.invalid/apk", null)),
         )
 
     @Test

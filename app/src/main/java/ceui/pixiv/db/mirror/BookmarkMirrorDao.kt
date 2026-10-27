@@ -195,6 +195,28 @@ interface BookmarkMirrorDao {
     @RawQuery(observedEntities = [BookmarkMirrorEntity::class, BookmarkMirrorTagEntity::class])
     fun rawAuthorFacets(query: SupportSQLiteQuery): List<BookmarkAuthorFacet>
 
+    // ─────────────── 全收藏分类查看（跨 2~4 个书架聚合） ───────────────
+    //
+    // 单书架那套 rawRows/rawCount/rawTagFacets 的 WHERE 里钉死了一个 shelfKey；「全收藏」
+    // 要一次看插画/小说 × 公开/悄悄四个书架，条件变成 `shelfKey IN (?,?,…)`，无法复用。
+    // SQL 依旧全部由 [AllBookmarkMirrorQuery] 用常量片段 + `?` 绑定拼出，这里只负责跑。
+
+    /** 跨书架作品行（分页）。SQL 见 [AllBookmarkMirrorQuery.rows]。 */
+    @RawQuery(observedEntities = [BookmarkMirrorEntity::class, BookmarkMirrorTagEntity::class])
+    fun rawAllRows(query: SupportSQLiteQuery): List<BookmarkMirrorEntity>
+
+    /** 跨书架命中总数（「共 N 件」）。SQL 见 [AllBookmarkMirrorQuery.count]。 */
+    @RawQuery(observedEntities = [BookmarkMirrorEntity::class, BookmarkMirrorTagEntity::class])
+    fun rawAllCount(query: SupportSQLiteQuery): Int
+
+    /** 跨书架标签云。SQL 见 [AllBookmarkMirrorQuery.tagFacets]。 */
+    @RawQuery(observedEntities = [BookmarkMirrorEntity::class, BookmarkMirrorTagEntity::class])
+    fun rawAllTagFacets(query: SupportSQLiteQuery): List<BookmarkTagFacet>
+
+    /** 跨书架汇总统计。SQL 见 [AllBookmarkMirrorQuery.stats]。 */
+    @RawQuery(observedEntities = [BookmarkMirrorEntity::class, BookmarkMirrorTagEntity::class])
+    fun rawAllStats(query: SupportSQLiteQuery): AllBookmarkMirrorStatsRow
+
     /**
      * 「我收藏过的年份」——年份筛选器的可选项，顺带给出每年多少件。
      *

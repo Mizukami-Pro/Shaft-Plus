@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -142,6 +143,32 @@ public class FragmentSettingsNetwork extends SettingsPageFragment<FragmentSettin
         });
         baseBind.showOriginalPreviewImageRela.setOnClickListener(v ->
                 baseBind.showOriginalPreviewImage.performClick());
+        // #T6：这一项与详情页图片区左上角的「查看原图 / 返回预览」是同一份持久化偏好，
+        // 把标题/说明写清楚（两处入口、默认行为），避免用户以为只能在这里改。
+        applyOriginalPreviewCopy();
+    }
+
+    /**
+     * 「详情页直接加载原图」开关的文案补充（#T6）。
+     *
+     * 布局是共享的设置行，说明文字没有独立 id（是标题 TextView 的兄弟节点），所以顺着父
+     * LinearLayout 找到第二个 TextView 改文案 —— 不改 fragment_settings_network.xml，把改动
+     * 收敛在本任务的 Java 文件里。开关本身仍写 {@link Shaft#sSettings} 的
+     * isShowOriginalPreviewImage，与详情页图片区的一键开关双向同步。
+     */
+    private void applyOriginalPreviewCopy() {
+        baseBind.showOriginalPreviewImageMark.setText(R.string.settings_original_preview_title);
+        if (!(baseBind.showOriginalPreviewImageMark.getParent() instanceof LinearLayout)) {
+            return;
+        }
+        LinearLayout texts = (LinearLayout) baseBind.showOriginalPreviewImageMark.getParent();
+        for (int i = 0; i < texts.getChildCount(); i++) {
+            View child = texts.getChildAt(i);
+            if (child instanceof TextView && child.getId() != R.id.show_original_preview_image_mark) {
+                ((TextView) child).setText(R.string.settings_original_preview_desc);
+                break;
+            }
+        }
     }
 
     // ── 图片加速代理（issue #865） ──────────────────────────────────────

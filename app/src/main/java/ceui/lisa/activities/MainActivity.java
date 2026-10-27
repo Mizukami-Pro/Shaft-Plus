@@ -647,17 +647,7 @@ public class MainActivity extends BaseActivity<ActivityCoverBinding>
         baseBind.navigationRail.setSelectedItemId(tabMenuIds[navigationInitPosition]);
         Manager.get().restore();
 
-        // Show rate dialog after a short delay to avoid disrupting app startup.
-        // 浏览记录云同步同意框不在首页弹,改到用户点进浏览历史页时再问(见 FragmentHistoryTabs / issue #889)。
-        baseBind.viewPager.postDelayed(
-                () -> {
-                    // 应用内推送正在展示就这次不弹评分框(showIfNeeded 没跑到就不消耗那一次机会),
-                    // 两个框叠在一起谁都看不清。
-                    if (InAppPushCenter.INSTANCE.isShowing()) return;
-                    ceui.pixiv.widgets.RateAppDialog.Companion.showIfNeeded(
-                            getSupportFragmentManager());
-                },
-                2000);
+        // shaft+ 不调度应用市场评分提醒；收藏、关注和正常应用内推送不受影响。
         // 首帧只建当前 tab：其余页停在 CREATED（见 LazyFragmentPagerAdapter），
         // 连同抽屉菜单一起排进「每帧一件事」的队列，首帧之后逐个补上。
         // 首页推荐插到最前：从别的启动页最常切回的就是它，而且它很轻（~10ms），先建还能替
@@ -878,6 +868,8 @@ public class MainActivity extends BaseActivity<ActivityCoverBinding>
                 new DrawerEntry[] {
                     new DrawerEntry(R.id.illust_star, R.string.string_319),
                     new DrawerEntry(R.id.novel_star, R.string.string_320),
+                    // 全收藏分类：跨插画/漫画/小说、跨公开/悄悄，按作品标签聚合全部收藏。
+                    new DrawerEntry(R.id.nav_all_bookmark_tags, R.string.tag_browse_entry),
                     new DrawerEntry(R.id.watch_later, R.string.watch_later),
                     new DrawerEntry(R.id.nav_pinned_tags, R.string.pinned_content),
                     // 精华列:各处「收藏到精华」写进 feature_table 的本地列表快照。c3f08172 侧栏
@@ -1128,6 +1120,10 @@ public class MainActivity extends BaseActivity<ActivityCoverBinding>
         } else if (id == R.id.nav_plaza) {
             intent = new Intent(mContext, TemplateActivity.class);
             intent.putExtra(TemplateActivity.EXTRA_FRAGMENT, TemplateRoute.PLAZA.key);
+        } else if (id == R.id.nav_all_bookmark_tags) {
+            intent = new Intent(mContext, TemplateActivity.class);
+            intent.putExtra(TemplateActivity.EXTRA_FRAGMENT, TemplateRoute.ALL_BOOKMARK_TAGS.key);
+            intent.putExtra("hideStatusBar", false);
         }
         if (intent != null) {
             // 当前最热 / 本月收藏 / 操作记录:服务端聚合内容可能含 R-18,进去前过一次警示框

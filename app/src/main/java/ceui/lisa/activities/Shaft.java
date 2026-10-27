@@ -14,7 +14,6 @@ import android.os.Looper;
 import android.view.Gravity;
 
 import com.blankj.utilcode.util.BarUtils;
-import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.gson.Gson;
 import com.hjq.toast.Toaster;
 
@@ -740,14 +739,6 @@ public class Shaft extends Application implements ServicesProvider {
             filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
             registerReceiver(netWorkStateReceiver, filter);
         });
-
-        try {
-            FirebaseAnalytics.getInstance(this).setAnalyticsCollectionEnabled(
-                    sSettings.isFirebaseEnable()
-            );
-        } catch (Exception e) {
-            Timber.w(e, "Failed to initialize Firebase Analytics");
-        }
 
         // 动态快捷方式：getDynamicShortcuts 是一次 binder IPC，O+ 还要现画一张
         // adaptive icon 位图。只有用户长按启动图标才看得到，没有任何理由抢首帧。

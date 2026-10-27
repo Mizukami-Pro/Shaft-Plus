@@ -81,6 +81,16 @@ internal class ArtworkTabletStage(
     private var illust: Illust? = null
     private var systemInsets: Insets = Insets.NONE
 
+    /**
+     * 舞台**实际**出图用的分辨率模式（true = 原图），null = 还没出过图（[bind] 未跑或已 [release]）。
+     *
+     * 平板排版的作品图归舞台自己取（不走列表那个 `IllustAdapter`），所以 `ArtworkV3Fragment` 里
+     * 「adapter 建过才记录」的那份 marker 在平板下永远是 null，无法用来判断对外部偏好变化要不要重取。
+     * 舞台自带一份：`bind()` 时记下本次真实渲染用的模式；全局「详情页直接加载原图」/本页瞬时
+     * 「加载原图」在别处被改掉、再回到本页时，靠它判断是否需要按新清晰度重新请求（#T9）。
+     */
+    private var renderedOriginalMode: Boolean? = null
+
     private val content = FrameLayout(ctx).apply {
         clipChildren = false
         clipToPadding = false
@@ -238,9 +248,16 @@ internal class ArtworkTabletStage(
     fun bind(next: Illust) {
         val previous = illust
         illust = next
+        val mode = currentOriginalMode()
         // 只在「决定画面的字段」变了时重建：列表页带来的精简 bean 可能还没有图片地址 / 宽高，
-        // 完整详情落池后要重新出图；收藏、关注这类变化不该让舞台重新取图
-        if (previous != null && visualKey(previous) == visualKey(next)) return
+        // 完整详情落池后要重新出图；收藏、关注这类变化不该让舞台重新取图。
+        if (previous != null && visualKey(previous) == visualKey(next)) {
+            // bean 没变不代表画面该不变：原图/预览也是渲染输入的一部分，只是它只影响每页取的 URL，
+            // 不必重建环境色 / 页码条 / 阅读胶囊，所以在这里单独判、只重取作品页（#T9）。
+            syncOriginalMode(mode)
+            return
+        }
+        renderedOriginalMode = mode
         Glide.with(fragment)
             .load(GlideUtil.getSquare(next))
             .transform(BlurTransformation(BACKDROP_BLUR_RADIUS, BACKDROP_BLUR_SAMPLING))
@@ -301,16 +318,44 @@ internal class ArtworkTabletStage(
         illust.meta_pages?.size,
     )
 
-    /** 菜单「加载原图」之后：按新的清晰度重新取图。 */
+    /** 当前该用的取图模式：全局「详情页直接加载原图」或本页瞬时「加载原图」。 */
+    private fun currentOriginalMode(): Boolean =
+        Shaft.sSettings.isShowOriginalPreviewImage || forceOriginal()
+
+    /**
+     * 菜单「加载原图」/ 本页 chip / 外部偏好改动之后：按当前清晰度重新取图，保留当前页。
+     *
+     * 取图发生在 [PageAdapter.onBindViewHolder] 的 [pageUrl] 里，读的就是 [currentOriginalMode]；
+     * 重取前先把实际渲染模式记下来，保证 marker 与真正出图用的模式一致（#T9）。
+     */
     fun reloadPages() {
         val current = illust ?: return
+        renderedOriginalMode = currentOriginalMode()
         if (current.isGif()) return
         val position = pager.currentItem
         pager.adapter = PageAdapter(current, current.page_count.coerceAtLeast(1))
         pager.setCurrentItem(position, false)
     }
 
+    /**
+     * 外部（设置页 / 经典详情页 / 相邻作品）改了原图偏好后同步舞台：只有实际渲染模式确实变了
+     * 才按新清晰度重取并保留当前页；没变是 no-op，避免每次 onResume 都白闪一次（#T9）。
+     */
+    fun syncOriginalMode() = syncOriginalMode(currentOriginalMode())
+
+    private fun syncOriginalMode(mode: Boolean) {
+        val current = illust ?: return
+        when {
+            // 还没出过图：下一次 bind / reloadPages 本来就会按当前偏好取图，这里只对齐 marker。
+            renderedOriginalMode == null -> renderedOriginalMode = mode
+            // 动图 original 是 zip，舞台播的是解出来的帧序列，模式变化不影响画面。
+            current.isGif() -> renderedOriginalMode = mode
+            shouldReloadPagesForOriginalMode(renderedOriginalMode, mode) -> reloadPages()
+        }
+    }
+
     fun release() {
+        renderedOriginalMode = null
         releaseUgoira()
         pager.adapter = null
         strip.adapter = null
@@ -332,7 +377,7 @@ internal class ArtworkTabletStage(
     }
 
     private fun pageUrl(illust: Illust, index: Int): GlideUrl? {
-        val original = Shaft.sSettings.isShowOriginalPreviewImage || forceOriginal()
+        val original = currentOriginalMode()
         return when {
             original -> GlideUtil.getOriginalImage(illust, index)
             illust.page_count > 1 -> GlideUtil.getLargeImage(illust, index)
@@ -549,3 +594,17 @@ internal class ArtworkTabletStage(
             (color and 0x00FFFFFF) or ((alpha * 255).toInt() shl 24)
     }
 }
+
+/**
+ * 详情页「原图偏好被外部改掉后，回到本页要不要按新清晰度重取」的判定（#T9）。
+ *
+ * 提成纯函数是为了：① 平板舞台（[ArtworkTabletStage.syncOriginalMode]）和手机列表 adapter
+ * （`ArtworkV3Fragment.syncOriginalModeFromSettings`）两处判定语义只有一份，不会各自漂移；
+ * ② 这个判定能被不依赖 View 的单测钉住。
+ *
+ * - null = 还没按任何模式出过图：首次 bind / reloadPages 会自己按当前偏好取图，不需要额外重取；
+ * - 相等 = 画面已经是当前模式：no-op，避免每次 onResume 都白闪一次；
+ * - 不等 = 画面还停在旧分辨率：需要按新偏好重取。
+ */
+internal fun shouldReloadPagesForOriginalMode(rendered: Boolean?, current: Boolean): Boolean =
+    rendered != null && rendered != current

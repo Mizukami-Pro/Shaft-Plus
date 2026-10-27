@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  「我的Tag排行」入口图标（toolbar 菜单）。
+  深色 AppBarOverlay 顶栏上的图标一律用纯白实心，与其他列表页菜单图标（ic_more_vert_black_24dp
+  白版、ic_baseline_leaderboard 等待补位）一致；toolbar 不依赖 tint。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M7.5,21H2V9h5.5V21zM14.75,3h-5.5v18h5.5V3zM22,11h-5.5v10H22V11z" />
+</vector>

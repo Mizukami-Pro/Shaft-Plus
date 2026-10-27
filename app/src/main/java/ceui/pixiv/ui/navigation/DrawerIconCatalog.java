@@ -78,6 +78,9 @@ public final class DrawerIconCatalog {
             return R.drawable.ic_fiber_new_black_24dp;
         } else if (actionId == R.id.nav_site_recommend) {
             return R.drawable.ic_baseline_star_24;
+        } else if (actionId == R.id.nav_all_bookmark_tags) {
+            // 全收藏分类：标签/收藏夹语义，复用现成的标签图标，避免为一个入口新增资源。
+            return R.drawable.ic_loyalty_black_24dp;
         }
         return R.drawable.ic_help_outline_black_24dp;
     }

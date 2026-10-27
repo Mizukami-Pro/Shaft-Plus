@@ -10,7 +10,6 @@ import android.widget.TextView;
 
 import java.text.DecimalFormat;
 
-import com.google.firebase.analytics.FirebaseAnalytics;
 
 import ceui.lisa.R;
 import ceui.lisa.activities.Shaft;
@@ -68,18 +67,9 @@ public class FragmentSettingsExperimental extends SettingsPageFragment<FragmentS
         baseBind.autoSnapshotOnIllustMangaRela.setOnClickListener(v ->
                 baseBind.autoSnapshotOnIllustManga.performClick());
 
-        // google(Play)渠道不展示公开聊天室横幅开关，与 SettingsCatalog 索引一致。
+        // Lite 渠道不显示公开聊天室横幅开关。
         if (ceui.lisa.BuildConfig.IS_LITE) {
             baseBind.showChatRoomPushBannerRela.setVisibility(View.GONE);
-            // 上面整组消失后 Firebase 成了页内唯一一行,它原本用来跟前一组拉开的
-            // 上外边距就成了页首一块空白,去掉。改完必须 setLayoutParams 回写:直接改 lp 字段
-            // 只是碰巧因为 initData() 跑在首次 layout 之前才生效,靠的是时序不是契约;
-            // setLayoutParams 内部会 requestLayout,任何时机调用都对。
-            ViewGroup.MarginLayoutParams lp =
-                    (ViewGroup.MarginLayoutParams) baseBind.isFirebaseEnableRela.getLayoutParams();
-            lp.topMargin = 0;
-            baseBind.isFirebaseEnableRela.setLayoutParams(lp);
-            bindFirebaseRow();
             return;
         }
 
@@ -95,8 +85,6 @@ public class FragmentSettingsExperimental extends SettingsPageFragment<FragmentS
         });
         baseBind.showChatRoomPushBannerRela.setOnClickListener(v ->
                 baseBind.showChatRoomPushBanner.performClick());
-
-        bindFirebaseRow();
     }
 
     /**
@@ -162,21 +150,6 @@ public class FragmentSettingsExperimental extends SettingsPageFragment<FragmentS
         }
         baseBind.debugMirrorBannerRela.setOnClickListener(v ->
                 ceui.pixiv.ui.debug.DebugMirrorBannerTrigger.show(mContext));
-    }
-
-    private void bindFirebaseRow() {
-        baseBind.isFirebaseEnable.setChecked(Shaft.sSettings.isFirebaseEnable());
-        baseBind.isFirebaseEnable.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Shaft.sSettings.setFirebaseEnable(isChecked);
-                Local.setSettings(Shaft.sSettings);
-                Common.showToast(getString(R.string.string_428), 2);
-                FirebaseAnalytics.getInstance(mContext).setAnalyticsCollectionEnabled(isChecked);
-            }
-        });
-        baseBind.isFirebaseEnableRela.setOnClickListener(v ->
-                baseBind.isFirebaseEnable.performClick());
     }
 
     private void bindAutoSnapshotQuotaRow() {

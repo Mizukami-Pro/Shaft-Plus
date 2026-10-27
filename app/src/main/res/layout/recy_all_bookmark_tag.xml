@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  标签云列表的一行：名次 → 标签名（原文 + 译名）→ 收藏作品数。
+
+  通栏平铺，不套卡底：标签可能上千个，卡片会变成一串灰盒子；行间只有 BottomDividerDecoration
+  画的通栏 hairline。整行是点击热区（selectableItemBackground 矩形涟漪），高度最小 60dp。
+  名次是 Montserrat 等宽数字，前 3 名由 Fragment/Adapter 用主题强调色点亮（「我的Tag排行」
+  在列表里的视觉呼应）。中文名走系统字体回退，英文与数字走 Montserrat SemiBold。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="60dp"
+    android:orientation="horizontal"
+    android:paddingStart="16dp"
+    android:paddingTop="12dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="12dp">
+
+    <TextView
+        android:id="@+id/tag_rank"
+        style="@style/textMontserratSemiBold"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:fontFeatureSettings="tnum"
+        android:gravity="start"
+        android:includeFontPadding="false"
+        android:textColor="@color/v3_text_3"
+        android:textSize="12sp"
+        tools:text="01" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tag_name"
+            style="@style/textMontserratSemiBold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            android:textColor="@color/v3_text_1"
+            android:textSize="15sp"
+            tools:text="#原神" />
+
+        <TextView
+            android:id="@+id/tag_translated"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            android:textColor="@color/v3_text_2"
+            android:textSize="12sp"
+            android:visibility="gone"
+            tools:text="げんしん"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tag_count"
+        style="@style/textMontserratSemiBold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:fontFeatureSettings="tnum"
+        android:includeFontPadding="false"
+        android:textColor="@color/v3_text_1"
+        android:textSize="15sp"
+        tools:text="1,203" />
+
+    <TextView
+        android:id="@+id/tag_count_unit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="2dp"
+        android:includeFontPadding="false"
+        android:text="@string/tag_browse_count_unit"
+        android:textColor="@color/v3_text_2"
+        android:textSize="11sp" />
+</LinearLayout>

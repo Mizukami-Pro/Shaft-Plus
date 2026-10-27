@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    仅 debug 构建使用的 manifest 覆盖（release 不包含本文件）。
+
+    目的：让「全收藏分类」等页面可以在无 pixiv 登录的模拟器上通过 adb 直接启动做 UI 验收
+    （TemplateActivity 在正式 manifest 里 exported=false，adb 无法直接拉起）。
+    只放开 TemplateActivity 的 exported，仅影响 debug 包，不改变任何业务逻辑与 release 行为。
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <activity
+            android:name="ceui.lisa.activities.TemplateActivity"
+            android:exported="true"
+            tools:node="merge" />
+    </application>
+
+</manifest>

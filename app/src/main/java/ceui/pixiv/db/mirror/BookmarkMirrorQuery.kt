@@ -2,7 +2,6 @@ package ceui.pixiv.db.mirror
 
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
-import java.util.Locale
 
 /**
  * 「花式筛选」的筛选条件。**纯数据、可 Parcelize 之外的一切都不掺**，界面把它当状态传，
@@ -173,9 +172,6 @@ object BookmarkMirrorQuery {
     private const val ROWS = "bookmark_mirror_table"
     private const val TAGS = "bookmark_mirror_tag_table"
 
-    /** LIKE 的转义符。标题/标签里真出现 `%` `_` 的时候不该当通配符。 */
-    private const val LIKE_ESCAPE = '\\'
-
     fun rows(filter: BookmarkFilter, limit: Int, offset: Int): SupportSQLiteQuery {
         val args = mutableListOf<Any?>()
         val where = buildWhere(filter, args)
@@ -302,30 +298,11 @@ object BookmarkMirrorQuery {
     /**
      * 关键词：按空白分词，**逐词 AND**。
      *
-     * 分词而不是整串匹配，是因为用户脑子里的检索是「东方 + 灵梦」而不是一个连续子串；
-     * 而逐词 AND 而不是 OR，是因为多打一个词的意图永远是「再缩小一点」。
+     * 实现抽在 [MirrorKeywordSql] 里：跨书架的「全收藏分类」查询必须与单书架**逐字一致**的
+     * 检索语义（否则同一份数据换个入口就换个答案），所以两边共用同一段逻辑。
      */
     private fun appendKeyword(filter: BookmarkFilter, clauses: MutableList<String>, args: MutableList<Any?>) {
-        val terms = filter.keyword.trim().lowercase(Locale.ROOT)
-            .split(WHITESPACE)
-            .filter { it.isNotEmpty() }
-            .distinct()
-            .take(MAX_KEYWORD_TERMS)
-        terms.forEach { term ->
-            val asId = term.toLongOrNull()?.takeIf { it > 0L }
-            if (asId != null) {
-                // 纯数字：既可能是想找某一件作品（illust_id），也可能是想找某个画师的全部收藏
-                //（作者 uid）—— 用户脑子里就是「我把这串数字贴进来」，不该逼他先选类型。
-                // 同时保留文本匹配：标题/标签里本来就带数字的作品照样命中。
-                clauses += "(searchText LIKE ? ESCAPE '$LIKE_ESCAPE' OR targetId = ? OR authorId = ?)"
-                args += "%${escapeLike(term)}%"
-                args += asId
-                args += asId
-            } else {
-                clauses += "searchText LIKE ? ESCAPE '$LIKE_ESCAPE'"
-                args += "%${escapeLike(term)}%"
-            }
-        }
+        MirrorKeywordSql.append(filter.keyword, clauses, args)
     }
 
     private fun appendTags(filter: BookmarkFilter, clauses: MutableList<String>, args: MutableList<Any?>) {
@@ -376,16 +353,4 @@ object BookmarkMirrorQuery {
             args += max
         }
     }
-
-    private fun escapeLike(raw: String): String = buildString(raw.length + 4) {
-        raw.forEach { ch ->
-            if (ch == '%' || ch == '_' || ch == LIKE_ESCAPE) append(LIKE_ESCAPE)
-            append(ch)
-        }
-    }
-
-    private val WHITESPACE = Regex("\\s+")
-
-    /** 关键词分词的上限：多到这个数已经不是检索而是误输入，再多只是白白拖慢 LIKE。 */
-    private const val MAX_KEYWORD_TERMS = 8
 }

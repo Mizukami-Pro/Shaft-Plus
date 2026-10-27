@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- 海报预览的「展台」：与海报自身同色系的深色渐变，letterbox 时不会割裂画面。 -->
+    <gradient
+        android:angle="270"
+        android:centerColor="#101B33"
+        android:endColor="#080C16"
+        android:startColor="#0A0F1C"
+        android:type="linear" />
+    <corners android:radius="20dp" />
+</shape>

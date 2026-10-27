@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ===== Detail page: preview / full-resolution original toggle ===== -->
+    <string name="detail_original_chip_show">View original</string>
+    <string name="detail_original_chip_shown">Show preview</string>
+    <string name="detail_original_chip_desc_off">Preview is shown. Tap to load the full-resolution original.</string>
+    <string name="detail_original_chip_desc_on">The original is shown. Tap to go back to the preview.</string>
+    <string name="detail_original_toast_on">Showing original (full resolution)</string>
+    <string name="detail_original_toast_off">Showing preview (faster, less data)</string>
+    <string name="detail_original_menu_show">Show original (full resolution)</string>
+    <string name="detail_original_menu_hide">Back to preview</string>
+
+    <!-- ===== Settings hint ===== -->
+    <string name="settings_original_preview_title">Load full-resolution originals on detail pages</string>
+    <string name="settings_original_preview_desc">When on, illustration/manga detail pages load originals by default. When off you can still tap “View original” / “Show preview” on the detail page; both entries stay in sync.</string>
+
+    <!-- ===== Novel reader: one-tap translate button ===== -->
+    <string name="reader_upgrade_translate_btn">Translate</string>
+    <string name="reader_upgrade_translate_running">Translating</string>
+    <string name="reader_upgrade_translate_progress">Translating %1$d%%</string>
+    <string name="reader_upgrade_translate_ready">Translation</string>
+    <string name="reader_upgrade_translate_failed">Resume</string>
+    <string name="reader_upgrade_translate_progress_toast">Translating the whole novel (%1$d/%2$d paragraphs). You can switch the display mode when it finishes.</string>
+
+</resources>

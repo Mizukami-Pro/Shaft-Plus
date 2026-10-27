@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    「全收藏分类查看」标签详情页（AllBookmarkTagDetailFragment）的文案。
+
+    文件归属：tag-detail-ui 队友。只放本页专属文案，不改 values/strings.xml
+    （那边是全 app 共用的大文件，改它容易和其它任务撞车）。
+    能复用的既有文案（筛选面板行标题 / 选项 / 筛选入口徽标等）一律直接引用
+    R.string.search_filter_v3_*，不在这里抄第二份。
+-->
+<resources>
+    <!-- 顶栏标题：`#` 前缀 + 标签原名（译名放副标题）。 -->
+    <string name="all_bookmark_tag_detail_title">#%1$s</string>
+
+    <!-- 顶栏副标题（译名缺失时整行不显示）。 -->
+    <string name="all_bookmark_tag_detail_subtitle">%1$s</string>
+
+    <!-- 作品内搜索框提示：说明搜索范围是标题 / 作者 / 标签（含译名） / 简介。 -->
+    <string name="all_bookmark_tag_detail_search_hint">搜索此标签下的作品（标题 / 作者 / 标签）</string>
+
+    <!-- 命中总数。N 是格式化后的整数（千分位）。 -->
+    <string name="all_bookmark_tag_detail_count">共 %1$s 件</string>
+
+    <!-- chips 行前的小节标签：把「作品类别」「排序」和搜索框区分开。 -->
+    <string name="all_bookmark_tag_detail_section_work_type">作品类别</string>
+    <string name="all_bookmark_tag_detail_section_sort">排序</string>
+
+    <!-- 排序 chips。默认「最新发布」= 作品发布时间新 → 旧；没有「收藏时间」选项，
+         理由见 AllBookmarkTagDetailViewModel.kt 的类注释。 -->
+    <string name="all_bookmark_tag_detail_sort_newest">最新发布</string>
+    <string name="all_bookmark_tag_detail_sort_oldest">最早发布</string>
+    <string name="all_bookmark_tag_detail_sort_bookmarked">最多收藏</string>
+    <string name="all_bookmark_tag_detail_sort_viewed">热度</string>
+    <string name="all_bookmark_tag_detail_sort_trending">趋势</string>
+
+    <!-- 作品类别 chips —— 传数据库 workType 原始值，五档互斥。
+         注意：这里「插画」**不含动图**（与本页旧版本不同）：AllBookmarkWorkFilter.workTypes
+         要求 UI 显式给出组合，动图单独成档；旧的 loadWorks 重载里「illust 自动并入 ugoira」
+         的映射只服务旧接口。 -->
+    <string name="all_bookmark_tag_detail_type_all">全部</string>
+    <string name="all_bookmark_tag_detail_type_illust">插画</string>
+    <string name="all_bookmark_tag_detail_type_manga">漫画</string>
+    <string name="all_bookmark_tag_detail_type_novel">小说</string>
+    <string name="all_bookmark_tag_detail_type_ugoira">动图</string>
+
+    <!-- 筛选面板：标题 / 底部动作。 -->
+    <string name="all_bookmark_tag_detail_filter_title">筛选</string>
+    <string name="all_bookmark_tag_detail_filter_reset">重置</string>
+    <string name="all_bookmark_tag_detail_filter_done">完成</string>
+
+    <!-- 筛选面板：页数行（数据层按 pageCount / 小说恒 1 过滤）。 -->
+    <string name="all_bookmark_tag_detail_row_pages">页数</string>
+    <string name="all_bookmark_tag_detail_pages_all">不限</string>
+    <string name="all_bookmark_tag_detail_pages_single">单页</string>
+    <string name="all_bookmark_tag_detail_pages_multi">多页</string>
+
+    <!-- 筛选面板：users入り 标签档位横幅。语义是「带 N users入り 及以上标签的作品」。 -->
+    <string name="all_bookmark_tag_detail_users_min">%1$d users入り以上</string>
+
+    <!-- 筛选面板：投稿期间命中自定义区间时的值文案（起止都可能只有一端）。 -->
+    <string name="all_bookmark_tag_detail_duration_range">%1$s → %2$s</string>
+
+    <!-- 空态：这个标签下确实没有收藏作品。 -->
+    <string name="all_bookmark_tag_detail_empty">这个标签下还没有收藏的作品</string>
+
+    <!-- 空态：未登录 / 账号失效（没有书架可查）。 -->
+    <string name="all_bookmark_tag_detail_empty_login">登录 pixiv 账号后才能查看收藏</string>
+
+    <!-- 空态：有搜索词 / 类型 / 筛选条件，条件没命中。 -->
+    <string name="all_bookmark_tag_detail_empty_filtered">没有符合条件的作品</string>
+
+    <!-- 空态：镜像还在后台补齐，先说明会自己出现，别让用户以为这里坏了。 -->
+    <string name="all_bookmark_tag_detail_empty_syncing">收藏镜像还在后台补齐，补齐后会自动出现在这里</string>
+</resources>

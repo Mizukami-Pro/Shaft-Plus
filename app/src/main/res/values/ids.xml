@@ -77,4 +77,6 @@
     <item type="id" name="comment_translation_animator"/>
     <item name="nav_referral_plan" type="id"/>
     <item name="referral_scroll" type="id"/>
+    <!-- 全收藏分类查看（侧边栏「我的」分组） -->
+    <item name="nav_all_bookmark_tags" type="id"/>
 </resources>

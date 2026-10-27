@@ -380,6 +380,32 @@
             android:textStyle="bold"
             android:visibility="gone" />
 
+        <!-- 预览图 / 原图(完整分辨率)一键切换(#T6)。
+             左侧图片区常驻可见,和右上角页码浮标同一套胶囊皮、同一高度;仅动图(ugoira)与
+             快照页隐藏(两者都没有可取的原图)。文案按「点一下会发生什么」写:
+             预览中 →「查看原图」,已显示原图 →「返回预览」。见 FragmentIllust.setupOriginalToggle。 -->
+        <TextView
+            android:id="@+id/btn_original_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/toolbar"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_v3_expand_pill"
+            android:clickable="true"
+            android:elevation="@dimen/six_dp"
+            android:focusable="true"
+            android:letterSpacing="0.02"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="7dp"
+            android:paddingBottom="7dp"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
     </RelativeLayout>
 
 

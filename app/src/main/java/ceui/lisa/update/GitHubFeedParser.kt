@@ -8,7 +8,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 /**
  * GitHub Releases Atom XML (RSS Feeds) 解析器。
  *
- * GitHub 的公开 Releases 提供 Atom 订阅（如 `https://github.com/CeuiLiSA/Pixiv-Shaft/releases.atom`），
+ * GitHub 的公开 Releases 提供 Atom 订阅（如 `https://github.com/Mizukami-Pro/Shaft-Plus/releases.atom`），
  * 不受未鉴权 REST API 端点每小时 60 次的 Rate Limit 限制。
  *
  * 订阅中包含版本条目 `<entry>`、标签信息、发布日期与 HTML 格式更新日志。
@@ -105,7 +105,7 @@ object GitHubFeedParser {
             val markdownBody = htmlToMarkdown(content)
 
             val versionName = tagName.removePrefix("v").removePrefix("V")
-            val apkName = "PixShaft_${versionName}_classic.apk"
+            val apkName = "ShaftPlus_${versionName}_arm64.apk"
             val downloadUrl = "https://github.com/$owner/$repo/releases/download/$tagName/$apkName"
             val asset = GitHubAsset(
                 name = apkName,

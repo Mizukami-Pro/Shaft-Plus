@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    「我的Tag排行」海报相关文案。
+    海报本身是独立 Bitmap，这里的文案会被画进图片；修改时注意保持中文标点与断句。
+-->
+<resources>
+    <!-- 弹窗骨架 -->
+    <string name="tag_poster_dialog_title">我的 Tag 排行</string>
+    <string name="tag_poster_close">关闭</string>
+    <string name="tag_poster_preview_description">我的 Tag 排行海报预览</string>
+    <string name="tag_poster_generating">正在生成海报…</string>
+    <string name="tag_poster_generate_failed">海报生成失败：%1$s</string>
+    <string name="tag_poster_show_account">显示账号昵称/ID</string>
+    <string name="tag_poster_show_avatar">显示头像</string>
+    <!-- 排行数量选项：默认 TOP 6，可切 TOP 20 -->
+    <string name="tag_poster_count_label">标签数量</string>
+    <string name="tag_poster_count_6">TOP 6</string>
+    <string name="tag_poster_count_20">TOP 20</string>
+    <string name="tag_poster_save">保存到相册</string>
+    <string name="tag_poster_saving">正在保存…</string>
+    <string name="tag_poster_share">分享</string>
+    <string name="tag_poster_saved">已保存到相册（Pictures/Shaft）</string>
+    <string name="tag_poster_save_failed">保存失败：%1$s</string>
+    <string name="tag_poster_share_failed">分享失败：%1$s</string>
+    <string name="tag_poster_permission_denied">需要存储权限才能保存到相册</string>
+    <string name="tag_poster_empty">还没有可排行的收藏标签</string>
+
+    <!-- 海报内的固定文案（会画进图片） -->
+    <string name="tag_poster_eyebrow">PIXIV BOOKMARK REPORT</string>
+    <string name="tag_poster_title_head">我的收藏</string>
+    <string name="tag_poster_title_accent">TAG</string>
+    <string name="tag_poster_title_tail">排行</string>
+    <!-- 前面会拼上 pixiv wordmark：pixiv + 本句 -->
+    <string name="tag_poster_subtitle">网站的我的收藏 · 按收藏作品数排序</string>
+    <string name="tag_poster_badge_top">TOP</string>
+    <string name="tag_poster_badge_tail">TAGS</string>
+    <string name="tag_poster_rank_count_unit">件作品</string>
+    <!-- 占位符是带千分位的作品数 -->
+    <string name="tag_poster_stats_total">共 %1$s 件收藏</string>
+    <string name="tag_poster_stats_tags">%1$s 个标签</string>
+    <!-- 数据来源行：前缀 + pixiv wordmark + 后缀 -->
+    <string name="tag_poster_source_prefix">数据来自我的</string>
+    <string name="tag_poster_source_suffix">收藏 · Shaft</string>
+    <string name="tag_poster_uid">UID %1$s</string>
+</resources>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  「全收藏分类」列表头：统计卡 + 同步完成状态。它是 RecyclerView 的第 0 项（随列表滚走）。
+
+  内容按 V3「汇总面板」配方：核心数字（作品总数，Montserrat SemiBold 30sp 等宽数字）+
+  单位小字 → 一行类型拆分 → 一行标签数与排序说明；右侧是手动同步入口（下拉刷新之外的
+  显式按钮）与「已全部同步（N 件作品）」的完成状态。
+
+  同步**进行中**的进度不在这里：它由列表上方常驻的同步横幅（fragment_all_bookmark_tags.xml
+  的 sync_banner）负责，本卡只在补齐后给出「已全部同步」。卡片底色（V3Palette.cardFill +
+  12% 主题色 hairline，22dp 圆角）不能写死在 XML 里，由 Adapter 创建视图时用 Context.card(22)
+  注入，十套主题色与日夜都跟随。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="16dp"
+    android:paddingTop="4dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="12dp">
+
+    <LinearLayout
+        android:id="@+id/stats_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="14dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/stats_total"
+                style="@style/textMontserratSemiBold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFeatureSettings="tnum"
+                android:includeFontPadding="false"
+                android:textColor="@color/v3_text_1"
+                android:textSize="30sp"
+                tools:text="1,860" />
+
+            <TextView
+                android:id="@+id/stats_total_unit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:includeFontPadding="false"
+                android:text="@string/tag_browse_stat_total_unit"
+                android:textColor="@color/v3_text_2"
+                android:textSize="12sp" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:id="@+id/stats_refresh"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="@string/tag_browse_sync_refresh"
+                android:focusable="true"
+                android:padding="9dp"
+                android:src="@drawable/ic_baseline_refresh_48" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/stats_breakdown"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:includeFontPadding="false"
+            android:textColor="@color/v3_text_2"
+            android:textSize="12sp"
+            tools:text="插画 1,200 · 漫画 300 · 小说 360" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/stats_tags"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:includeFontPadding="false"
+                android:textColor="@color/v3_text_2"
+                android:textSize="12sp"
+                tools:text="512 个标签 · 按作品数排序" />
+
+            <TextView
+                android:id="@+id/sync_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:includeFontPadding="false"
+                android:textColor="@color/v3_text_2"
+                android:textSize="12sp"
+                tools:text="正在后台同步 · 已同步 1,860 件" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

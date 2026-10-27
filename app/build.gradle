@@ -5,8 +5,6 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-parcelize'
 apply plugin: 'androidx.room'
-apply plugin: 'com.google.gms.google-services'
-apply plugin: 'com.google.firebase.crashlytics'
 // apply plugin: 'org.jmailen.kotlinter'  // 临时停用，见根 build.gradle
 
 // 官方包的 HMAC 密钥只在构建进程里读取，绝不生成进 BuildConfig/String 常量。
@@ -86,8 +84,8 @@ android {
         applicationId "ceui.pixiv"
         minSdkVersion 24
         targetSdkVersion 36
-        versionCode 43300
-        versionName "4.9.7"
+        versionCode 43301
+        versionName "4.9.7.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             // Production remains arm64-only. CI can request x86_64 so instrumented tests run on
@@ -121,7 +119,7 @@ android {
     // 签名材料不进 git。来源按优先级：
     //   1. 仓库根目录的 keystore.properties（gitignored，本机开发用）
     //   2. 环境变量 SHAFT_KEYSTORE_*（CI 从 Secrets 注入，见 .github/workflows/gradle.yml）
-    //   3. 都没有 → fallback 到 Android 默认 debug 签名，外部贡献者 clone 即可构建
+    //   3. release build 缺少 keystore 时拒绝签名（debug 仍允许默认 debug key）。
     def ksProps = new Properties()
     def ksPropsFile = rootProject.file("keystore.properties")
     if (ksPropsFile.exists()) {
@@ -132,6 +130,19 @@ android {
     def ksKeyAlias = ksProps.getProperty("keyAlias") ?: System.getenv("SHAFT_KEY_ALIAS")
     def ksKeyPassword = ksProps.getProperty("keyPassword") ?: System.getenv("SHAFT_KEY_PASSWORD")
     def hasShaftKeystore = ksStoreFile != null && rootProject.file(ksStoreFile).exists()
+    // Inspect the actual packaging tasks, including those reached through aggregate tasks.
+    def releaseInstrumentation = project.findProperty('SHAFT_TEST_BUILD_TYPE') == 'release' &&
+            project.findProperty('SHAFT_TEST_ABI') == 'x86_64'
+    tasks.configureEach { requestedTask ->
+        if (requestedTask.name in ['packageGithubRelease', 'packageGoogleRelease',
+                'packageGithubReleaseBundle', 'packageGoogleReleaseBundle']) {
+            requestedTask.doFirst {
+                if (!hasShaftKeystore && !releaseInstrumentation) {
+                    throw new GradleException('shaft+ release packaging requires a dedicated keystore via keystore.properties or SHAFT_KEYSTORE_* environment variables.')
+                }
+            }
+        }
+    }
 
     signingConfigs {
         if (hasShaftKeystore) {
@@ -167,7 +178,7 @@ android {
             signingConfig = hasShaftKeystore ? signingConfigs.shaft : signingConfigs.debug
 
             applicationIdSuffix ".cshaft"
-            resValue "string", "app_name", "Shaft(Debug)"
+            resValue "string", "app_name", "shaft+"
         }
         release {
             minifyEnabled true
@@ -175,18 +186,18 @@ android {
             buildConfigField "boolean", "IS_DEBUG_MODE", "false"
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             testProguardFiles 'proguard-test-rules.pro'
+            // CI instrumentation may build the release variant without publish secrets; the
+            // explicit assemble/bundle/package GithubRelease guard above prevents shipping this key.
             signingConfig = hasShaftKeystore ? signingConfigs.shaft : signingConfigs.debug
 
-            applicationIdSuffix ".pshaft"
-            resValue "string", "app_name", "Shaft"
+            applicationIdSuffix ".shaftplus"
+            resValue "string", "app_name", "shaft+"
         }
     }
 
-    // 按 flavor + buildType 生成一个可区分的名字,给 OutWakeActivity(pixiv 链接的
-    // 「打开方式」处理器)当 label —— 同时装了多个 build 时在系统选择器里能分清是哪个。
-    // github 渠道=Shaft、google(Play)渠道=PixShaft(沿用现有产品名),debug 追加 " Debug"。
+    // 所有渠道和构建类型统一使用定制版产品名，避免系统打开方式列表显示旧产品名。
     applicationVariants.all { variant ->
-        def base = variant.flavorName == "google" ? "PixShaft" : "Shaft"
+        def base = "shaft+"
         def label = variant.buildType.name == "debug" ? base + " Debug" : base
         variant.resValue "string", "out_wake_label", label
     }
@@ -269,6 +280,9 @@ tasks.withType(Test).configureEach {
     // Gradle 默认给测试进程 512m 堆。Robolectric SDK 35 沙箱一建起来常驻就 ~400m，
     // 两百多个测试类跑下来静态缓存再涨 ~100m，到 512m 就 OOM（CI 自 6262091aa 起一直红）。
     maxHeapSize = '2g'
+    def nativeTestTmp = layout.buildDirectory.dir('tmp/robolectric').get().asFile
+    systemProperty 'java.io.tmpdir', nativeTestTmp.absolutePath
+    doFirst { nativeTestTmp.mkdirs() }
 }
 
 dependencies {
@@ -302,6 +316,7 @@ dependencies {
     implementation libs.androidxLifecycleLiveData
     implementation libs.androidxLifecycleViewModel
     implementation libs.androidxCore
+    implementation libs.androidxLocalBroadcastManager
     // 原本由 navigation-fragment-ktx 传递引入,移除 Navigation 后需直接声明,
     // 提供 Fragment.viewModels() / activityViewModels() 等 KTX 扩展。
     implementation libs.androidxFragment
@@ -329,11 +344,6 @@ dependencies {
     implementation libs.nineOldAndroids
     implementation libs.viewPagerTransforms
     implementation libs.utilCode
-    implementation libs.firebaseAnalytics
-    implementation libs.firebaseCrashlytics
-
-    // Google Play In-App Review
-    implementation libs.googleReview
 
     implementation libs.colorPicker
     implementation libs.androidxSplashScreen

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Shaft</string>
+    <string name="app_name">shaft+</string>
     <string name="navigation_drawer_open">Buka panel navigasi</string>
     <string name="navigation_drawer_close">Tutup panel navigasi</string>
     <string name="nav_header_title">Android Studio</string>

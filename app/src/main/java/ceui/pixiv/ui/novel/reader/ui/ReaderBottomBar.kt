@@ -1,12 +1,21 @@
 package ceui.pixiv.ui.novel.reader.ui
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.view.View
 import android.widget.SeekBar
+import ceui.lisa.R
 import ceui.lisa.databinding.LayoutReaderBottomBarBinding
 
 class ReaderBottomBar(private val binding: LayoutReaderBottomBarBinding) {
 
     enum class Mode { Paged, VerticalScroll }
+
+    /**
+     * 一键翻译按钮的状态。文案由 [setTranslateState] 换算；Fragment 只负责把
+     * [ceui.pixiv.ui.novel.reader.NovelReaderV3ViewModel.TranslationState] 翻成这里的状态。
+     */
+    enum class TranslateState { Idle, Running, Failed, Ready }
 
     val view: View get() = binding.root
 
@@ -17,6 +26,8 @@ class ReaderBottomBar(private val binding: LayoutReaderBottomBarBinding) {
     var onSettingsClick: (() -> Unit)? = null
     var onThemeToggleClick: (() -> Unit)? = null
     var onSearchClick: (() -> Unit)? = null
+    /** 底部栏「翻译」:未翻译直接开翻,已有译文打开显示方式,翻译中提示进度。 */
+    var onTranslateClick: (() -> Unit)? = null
     var onSeekStart: (() -> Unit)? = null
     /** Paged mode: drag changes — pageIndex 0..total-1. */
     var onSeekChanged: ((pageIndex: Int) -> Unit)? = null
@@ -36,6 +47,7 @@ class ReaderBottomBar(private val binding: LayoutReaderBottomBarBinding) {
         binding.btnSettings.setOnClickListener { onSettingsClick?.invoke() }
         binding.btnThemeToggle.setOnClickListener { onThemeToggleClick?.invoke() }
         binding.btnSearch.setOnClickListener { onSearchClick?.invoke() }
+        binding.btnTranslate.setOnClickListener { onTranslateClick?.invoke() }
 
         binding.skProgress.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(s: SeekBar, progress: Int, fromUser: Boolean) {
@@ -107,9 +119,47 @@ class ReaderBottomBar(private val binding: LayoutReaderBottomBarBinding) {
         )
     }
 
+    /**
+     * 刷新「翻译」按钮的文案与强调色。
+     *
+     * - [TranslateState.Idle]：普通白色「翻译」；
+     * - [TranslateState.Running]：强调色 + 「翻译中 45%」进度（[total] 为 0 时只显示「翻译中」）；
+     * - [TranslateState.Failed]：强调色「继续翻译」（点击从断点续翻）；
+     * - [TranslateState.Ready]：强调色「译文」（点击打开译文显示方式）。
+     *
+     * 底栏其余按钮是纯白/浅白，翻译按钮一旦有状态就换强调色，让「已经翻过」这件事在
+     * 收起顶栏、只开底栏时也一眼可见（#T6）。
+     */
+    fun setTranslateState(state: TranslateState, done: Int = 0, total: Int = 0) {
+        val ctx = binding.root.context
+        val label = when (state) {
+            TranslateState.Idle -> ctx.getString(R.string.reader_upgrade_translate_btn)
+            TranslateState.Running ->
+                if (total > 0) {
+                    // 百分比而不是 x/y：底栏按钮等分宽度，长篇的四位数段数会把文案挤到省略号。
+                    ctx.getString(R.string.reader_upgrade_translate_progress, (done * 100 / total).coerceIn(0, 99))
+                } else {
+                    ctx.getString(R.string.reader_upgrade_translate_running)
+                }
+            TranslateState.Failed -> ctx.getString(R.string.reader_upgrade_translate_failed)
+            TranslateState.Ready -> ctx.getString(R.string.reader_upgrade_translate_ready)
+        }
+        val accent = state != TranslateState.Idle
+        binding.txtTranslate.text = label
+        binding.txtTranslate.setTextColor(if (accent) ACCENT else IDLE_TEXT)
+        binding.imgTranslate.imageTintList = ColorStateList.valueOf(if (accent) ACCENT else Color.WHITE)
+        binding.btnTranslate.contentDescription = label
+    }
+
     private companion object {
         // Resolution for the scroll-mode seekbar — fine enough that a 1-pixel
         // drag of the thumb still produces a meaningful jump on a long novel.
         const val SCROLL_MAX = 1000
+
+        /** 底栏是 #EE1F1F1F 的深色半透明条，暖金色在深底上对比度足够、又不抢主题色。 */
+        const val ACCENT = 0xFFFFC857.toInt()
+
+        /** 与 XML 里其它底栏文字一致的浅白。 */
+        const val IDLE_TEXT = 0xCCFFFFFF.toInt()
     }
 }

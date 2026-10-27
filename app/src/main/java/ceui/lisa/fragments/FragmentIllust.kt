@@ -64,6 +64,7 @@ import ceui.lisa.utils.Common
 import ceui.lisa.utils.SystemBarMetrics
 import ceui.lisa.utils.DensityUtil
 import ceui.lisa.utils.GlideUtil
+import ceui.lisa.utils.Local
 import ceui.lisa.utils.Params
 import ceui.lisa.utils.PixivOperate
 import ceui.lisa.utils.SearchTypeUtil
@@ -226,6 +227,14 @@ class FragmentIllust : BaseLazyFragment<FragmentIllustBinding>() {
      */
     private var bottomSheetPeekApplied = false
     private var pageProgressPillAttached = false
+
+    /**
+     * 图片区当前按哪种分辨率取图（true = 原图/完整分辨率）。
+     * 值就是持久化偏好 [Shaft.sSettings.isShowOriginalPreviewImage] 的快照；「设置页改开关后
+     * 返回 / 横滑到邻页」靠它判断要不要按新偏好重取（见 [syncOriginalModeFromSettings]）。
+     * null = 还没建过图片区。
+     */
+    private var renderedOriginalMode: Boolean? = null
 
     /**
      * 本次视图生命周期里，视口是否被 [ViewerPageLink]（二级大图翻页）挪动过。
@@ -601,6 +610,7 @@ class FragmentIllust : BaseLazyFragment<FragmentIllustBinding>() {
 
         setupTitle(illust)
         setupToolbarMenu(illust)
+        setupOriginalToggle(illust)
         attachPageProgressPill()
         setupLikeButton(illust)
         setupBottomSheet(illust)
@@ -751,11 +761,9 @@ class FragmentIllust : BaseLazyFragment<FragmentIllustBinding>() {
             true
         }
         R.id.action_show_original -> {
-            val adapter = IllustAdapter(
-                mActivity, this@FragmentIllust, illust, recyHeight, true
-            )
-            baseBind.recyclerView.adapter = adapter
-            vm.pageDimensions.value?.let { adapter.seedPageDimensions(it) }
+            // 与图片区左上角常驻 chip 同一个双向开关（#T6）：原来这里只能单向换 adapter 加载原图，
+            // 现在按持久化偏好切换，溢出菜单里也就能再点一次回到预览图。
+            setOriginalMode(illust, !Shaft.sSettings.isShowOriginalPreviewImage)
             true
         }
         R.id.action_mute_illust -> {
@@ -1203,6 +1211,17 @@ class FragmentIllust : BaseLazyFragment<FragmentIllustBinding>() {
                             baseBind.refreshLayout.translationY = -sheetDeltaY * slideOffset * 0.7f
                             // 面板拉起来就不是在「看图」了,浮标跟着淡出(#1058)。
                             baseBind.pageProgressPill.alpha = 1f - slideOffset
+                            // 原图切换 chip 同理,而且过了一半就收掉:alpha=0 的 View 仍然吃触摸,
+                            // 不然会「按到空气」点开原图(#T6)。收回时按当前作品重新判断可见性
+                            // (动图 / 快照页本来就没有这个入口)。
+                            baseBind.btnOriginalToggle.alpha = 1f - slideOffset
+                            if (slideOffset < 0.5f) {
+                                val current = currentIllust()
+                                baseBind.btnOriginalToggle.isVisible =
+                                    current != null && !isSnapshotMode && !current.isGif()
+                            } else {
+                                baseBind.btnOriginalToggle.isVisible = false
+                            }
                         }
                     })
                 }
@@ -1253,6 +1272,104 @@ class FragmentIllust : BaseLazyFragment<FragmentIllustBinding>() {
             // 只顶掉引用、不动视图,免得 adapter 的长按下载和跳二级详情读到过期的收藏态。
             (baseBind.recyclerView.adapter as? AbstractIllustAdapter<*>)?.rebindIllust(illust)
         }
+    }
+
+    // ── 预览图 / 原图(完整分辨率)一键切换(#T6) ──────────────────────────────
+
+    /**
+     * 图片区左上角「预览图 / 原图(完整分辨率)」一键切换。
+     *
+     * 取图偏好只有一份 —— [Shaft.sSettings.isShowOriginalPreviewImage]，也就是设置页
+     * 「详情页直接加载原图」那个开关。本入口与它双向同步：这里拨一下，设置页开关跟着变，
+     * 下次进详情页 / 横滑到相邻作品都保持；反过来，在设置页改了再回来，
+     * [syncOriginalModeFromSettings] 会按新偏好重取。默认关 = 预览图，与 v4.9.7 原行为一致，
+     * 不会让所有人一进详情页就吃原图流量。
+     *
+     * 动图(ugoira)与快照页不显示：前者 original 是 zip、后者只有本地快照文件，都没有「原图」可取。
+     */
+    private fun setupOriginalToggle(illust: Illust) {
+        val chip = baseBind.btnOriginalToggle
+        if (illust.isGif() || isSnapshotMode) {
+            chip.visibility = View.GONE
+            return
+        }
+        chip.visibility = View.VISIBLE
+        chip.setOnClick { setOriginalMode(illust, !Shaft.sSettings.isShowOriginalPreviewImage) }
+        renderedOriginalMode = Shaft.sSettings.isShowOriginalPreviewImage
+        renderOriginalToggle(illust)
+    }
+
+    /** 只刷文案 / 无障碍描述与溢出菜单标题，不碰图片。 */
+    private fun renderOriginalToggle(illust: Illust) {
+        if (illust.isGif() || isSnapshotMode) return
+        val showingOriginal = Shaft.sSettings.isShowOriginalPreviewImage
+        baseBind.btnOriginalToggle.setText(
+            if (showingOriginal) R.string.detail_original_chip_shown else R.string.detail_original_chip_show
+        )
+        baseBind.btnOriginalToggle.contentDescription = getString(
+            if (showingOriginal) R.string.detail_original_chip_desc_on else R.string.detail_original_chip_desc_off
+        )
+        // 溢出菜单里原来那条单向的「显示原图」也变成同一个双向开关，标题随当前模式变。
+        baseBind.toolbar.menu?.findItem(R.id.action_show_original)?.setTitle(
+            if (showingOriginal) R.string.detail_original_menu_hide else R.string.detail_original_menu_show
+        )
+    }
+
+    /** 写入持久化偏好并立刻按新分辨率重取当前图片区。 */
+    private fun setOriginalMode(illust: Illust, showOriginal: Boolean) {
+        if (Shaft.sSettings.isShowOriginalPreviewImage == showOriginal) {
+            renderOriginalToggle(illust)
+            return
+        }
+        Shaft.sSettings.setShowOriginalPreviewImage(showOriginal)
+        Local.setSettings(Shaft.sSettings)
+        Common.showToast(if (showOriginal) R.string.detail_original_toast_on else R.string.detail_original_toast_off)
+        // 用池里最新的 bean 重建：菜单回调 / chip 闭包捕获的 illust 可能已被池合并替换（#962 同款坑）。
+        rebuildImageAreaForResolution(currentIllust() ?: illust)
+        renderedOriginalMode = showOriginal
+        renderOriginalToggle(illust)
+    }
+
+    /**
+     * 分辨率模式切换后重建图片区：保留当前读到的那一页与页内偏移，整片按新分辨率重新取图。
+     *
+     * 复用 [ensureImageArea] 这条装配路径（含本地下载命中、快照、超大图降级、懒加载规则），
+     * 只是把 [renderedImageSignature] 置空逼它重建 adapter —— 不要在这里手搓第二套装配。
+     * 原图只在用户显式选择后才按页取，默认链路不变。
+     */
+    private fun rebuildImageAreaForResolution(illust: Illust) {
+        if (illust.isGif()) return
+        val listView = baseBind.recyclerView
+        val oldManager = listView.layoutManager as? LinearLayoutManager
+        val anchorPos = oldManager?.findFirstVisibleItemPosition()?.coerceAtLeast(0) ?: 0
+        val anchorView = oldManager?.findViewByPosition(anchorPos)
+        val anchorOffset = if (anchorView != null) anchorView.top - listView.paddingTop else 0
+        (listView.adapter as? IllustAdapter)?.release()
+        renderedImageSignature = null
+        ensureImageArea(illust)
+        (listView.layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(anchorPos, anchorOffset)
+        refreshPageProgressPill()
+    }
+
+    /**
+     * 设置页改了「详情页直接加载原图」再回到详情页、或横滑到预建好的邻页时，图片区可能还是按
+     * 旧偏好取的图。这里对比 [renderedOriginalMode] 与当前设置，不一致就按新偏好重取一次。
+     */
+    private fun syncOriginalModeFromSettings() {
+        val illust = currentIllust() ?: return
+        if (illust.isGif() || isSnapshotMode) return
+        val expected = Shaft.sSettings.isShowOriginalPreviewImage
+        // 还没建过图片区（view 刚重建、池里 bean 先到）就只记下当前偏好，别提前装配。
+        if (renderedOriginalMode == null) {
+            renderedOriginalMode = expected
+            renderOriginalToggle(illust)
+            return
+        }
+        if (renderedOriginalMode != expected) {
+            rebuildImageAreaForResolution(illust)
+            renderedOriginalMode = expected
+        }
+        renderOriginalToggle(illust)
     }
 
     private fun setupActionButtons(illust: Illust) {
@@ -1412,6 +1529,8 @@ class FragmentIllust : BaseLazyFragment<FragmentIllustBinding>() {
             }
             // 从二级大图页返回后，把进程内已缓存 ORIGINAL 的页直接回填，不重绑列表。
             (baseBind.recyclerView.adapter as? IllustAdapter)?.showCachedOriginalOverlays()
+            // 设置页 / 邻页改了「详情页直接加载原图」偏好时，回来要按新偏好重取（#T6）。
+            syncOriginalModeFromSettings()
         }
     }
 
@@ -1508,6 +1627,7 @@ class FragmentIllust : BaseLazyFragment<FragmentIllustBinding>() {
         bottomSheetPeekApplied = false
         menuIllust = null
         renderedMenuShape = null
+        renderedOriginalMode = null
         sheetDeltaY = 0
         loadedAvatarUrl = null
         aiHelper = null

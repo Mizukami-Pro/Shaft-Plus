@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Poster strings: the poster itself is a Bitmap, so these strings are painted into the image. -->
+<resources>
+    <string name="tag_poster_dialog_title">My tag ranking</string>
+    <string name="tag_poster_close">Close</string>
+    <string name="tag_poster_preview_description">My tag ranking poster preview</string>
+    <string name="tag_poster_generating">Generating poster…</string>
+    <string name="tag_poster_generate_failed">The poster could not be created: %1$s</string>
+    <string name="tag_poster_show_account">Show account name/ID</string>
+    <string name="tag_poster_show_avatar">Show avatar</string>
+    <string name="tag_poster_count_label">Tag count</string>
+    <string name="tag_poster_count_6">TOP 6</string>
+    <string name="tag_poster_count_20">TOP 20</string>
+    <string name="tag_poster_save">Save</string>
+    <string name="tag_poster_saving">Saving…</string>
+    <string name="tag_poster_share">Share</string>
+    <string name="tag_poster_saved">Saved to your gallery (Pictures/Shaft)</string>
+    <string name="tag_poster_save_failed">Save failed: %1$s</string>
+    <string name="tag_poster_share_failed">Share failed: %1$s</string>
+    <string name="tag_poster_permission_denied">Storage permission is required to save to the gallery</string>
+    <string name="tag_poster_empty">No bookmarked tags to rank yet</string>
+
+    <string name="tag_poster_eyebrow">PIXIV BOOKMARK REPORT</string>
+    <string name="tag_poster_title_head">My bookmarks</string>
+    <string name="tag_poster_title_accent">TAG</string>
+    <string name="tag_poster_title_tail">ranking</string>
+    <string name="tag_poster_subtitle">bookmarks ranked by saved works</string>
+    <string name="tag_poster_badge_top">TOP</string>
+    <string name="tag_poster_badge_tail">TAGS</string>
+    <string name="tag_poster_rank_count_unit">works</string>
+    <string name="tag_poster_stats_total">%1$s saved works</string>
+    <string name="tag_poster_stats_tags">%1$s tags</string>
+    <string name="tag_poster_source_prefix">Data from my</string>
+    <string name="tag_poster_source_suffix">bookmarks · Shaft</string>
+    <string name="tag_poster_uid">UID %1$s</string>
+</resources>

@@ -3,14 +3,12 @@ name: CI
 on:
   push:
     branches:
-      - master
-      - classic
+      - shaft-plus
     tags:
       - v*.*.*
   pull_request:
     branches:
-      - master
-      - classic
+      - shaft-plus
     paths-ignore:
       - '**.md'
       - '**.txt'
@@ -24,6 +22,7 @@ on:
 
 env:
   ORIGINAL_PROJECT: "CeuiLiSA/Pixiv-Shaft"
+  RELEASE_REPOSITORY: "Mizukami-Pro/Shaft-Plus"
   GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g"
 
 concurrency:
@@ -34,6 +33,8 @@ jobs:
   build:
     name: Build apk
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
 
     steps:
       - name: Clone repo
@@ -89,36 +90,16 @@ jobs:
             echo "APK_SUFFIX=master" >> $GITHUB_ENV
           elif [ "$BRANCH_NAME" = "classic" ]; then
             echo "APK_SUFFIX=classic" >> $GITHUB_ENV
+          elif [ "$BRANCH_NAME" = "shaft-plus" ]; then
+            echo "APK_SUFFIX=shaft-plus" >> $GITHUB_ENV
           fi
 
-      # 官方仓库的包必须带正确的 HMAC 密钥，否则广场/聊天会被 shaft-api-v2 401，
-      # 而 build.gradle 对空密钥是静默降级的（fork 友好），CI 不会自己红。
-      # 这里只比对 sha256 指纹：密钥是 256 bit 随机值，公开指纹无法反推。
-      # 指纹来源：服务器 /etc/shaft-api-v2/events-hmac-secret，`tr -d '\n' | sha256sum`。
-      # 轮换密钥时同步更新这里和 GitHub Secret SHAFT_EVENTS_HMAC。
-      # fork 发来的 PR 同样拿不到 Secrets，跳过。
-      - name: Verify SHAFT_EVENTS_HMAC secret
-        if: github.repository == env.ORIGINAL_PROJECT && (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork)
-        env:
-          SHAFT_EVENTS_HMAC: ${{ secrets.SHAFT_EVENTS_HMAC }}
-          EXPECTED_FINGERPRINT: e0f22bd504573b61863577d1369fc6c4c2e6dceab92cd5baddc3b9fe7fcfde6e
-        run: |
-          if [ -z "$SHAFT_EVENTS_HMAC" ]; then
-            echo "::error::SHAFT_EVENTS_HMAC secret is empty; the APK would sign with an empty key"
-            exit 1
-          fi
-          ACTUAL=$(printf '%s' "$SHAFT_EVENTS_HMAC" | sha256sum | awk '{print $1}')
-          if [ "$ACTUAL" != "$EXPECTED_FINGERPRINT" ]; then
-            echo "::error::SHAFT_EVENTS_HMAC fingerprint mismatch: got $ACTUAL"
-            exit 1
-          fi
-          echo "SHAFT_EVENTS_HMAC fingerprint OK"
+      # This fork intentionally does not use the upstream event HMAC signing secret.
+      # Keep builds isolated from upstream private credentials.
 
       # 单测跑在打包之前，红了就不出产物。只跑 debug 变体：release 变体的
       # 测试代码相同，多跑一遍只是白费 R8 前的编译时间。
       - name: Run unit tests
-        env:
-          SHAFT_EVENTS_HMAC: ${{ secrets.SHAFT_EVENTS_HMAC }}
         run: >-
           ./gradlew
           :app:testGithubDebugUnitTest
@@ -209,8 +190,6 @@ jobs:
 
       - name: Build debug apk
         if: github.ref_type == 'branch'
-        env:
-          SHAFT_EVENTS_HMAC: ${{ secrets.SHAFT_EVENTS_HMAC }}
         run: ./gradlew assembleGithubDebug
 
       - name: Upload debug artifact
@@ -221,7 +200,7 @@ jobs:
           path: app/build/outputs/apk/github/debug
 
       - name: Get tag name
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == env.ORIGINAL_PROJECT
+        if: startsWith(github.ref, 'refs/tags/') && github.repository == env.RELEASE_REPOSITORY && vars.SHAFTPLUS_CI_RELEASE == 'true'
         run: |
           set -x
           version_tag=${GITHUB_REF/refs\/tags\//}
@@ -230,7 +209,7 @@ jobs:
           echo "VERSION_TAG_SHORT=$version_tag_short" >> $GITHUB_ENV
 
       - name: Extract tag message before checkout
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == env.ORIGINAL_PROJECT
+        if: startsWith(github.ref, 'refs/tags/') && github.repository == env.RELEASE_REPOSITORY && vars.SHAFTPLUS_CI_RELEASE == 'true'
         run: |
           TAG_MESSAGE=$(git cat-file tag "$VERSION_TAG" 2>/dev/null | sed '1,/^$/d' || echo "")
           if [ -z "$TAG_MESSAGE" ]; then
@@ -240,50 +219,29 @@ jobs:
           echo "$TAG_MESSAGE" > /tmp/tag_message.txt
 
       - name: Detect and checkout correct branch
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == env.ORIGINAL_PROJECT
+        if: startsWith(github.ref, 'refs/tags/') && github.repository == env.RELEASE_REPOSITORY && vars.SHAFTPLUS_CI_RELEASE == 'true'
         run: |
-          # Auto-detect which branch this tagged commit belongs to
-          TAG_COMMIT=$(git rev-parse HEAD)
-          CLASSIC_CONTAINS=$(git merge-base --is-ancestor "$TAG_COMMIT" origin/classic && echo yes || echo no)
-          MASTER_CONTAINS=$(git merge-base --is-ancestor "$TAG_COMMIT" origin/master && echo yes || echo no)
-
-          if [ "$CLASSIC_CONTAINS" = "yes" ] && [ "$MASTER_CONTAINS" = "no" ]; then
-            TAG_BRANCH=classic
-          elif [ "$MASTER_CONTAINS" = "yes" ] && [ "$CLASSIC_CONTAINS" = "no" ]; then
-            TAG_BRANCH=master
-          elif [ "$CLASSIC_CONTAINS" = "yes" ] && [ "$MASTER_CONTAINS" = "yes" ]; then
-            # Commit exists on both branches, pick the one whose tip is closer
-            CLASSIC_DIST=$(git rev-list --count "$TAG_COMMIT"..origin/classic)
-            MASTER_DIST=$(git rev-list --count "$TAG_COMMIT"..origin/master)
-            if [ "$CLASSIC_DIST" -le "$MASTER_DIST" ]; then
-              TAG_BRANCH=classic
-            else
-              TAG_BRANCH=master
-            fi
-          else
-            TAG_BRANCH=master
-          fi
-
+          # Shaft+ fork publishes tags from its dedicated shaft-plus branch.
+          TAG_BRANCH=shaft-plus
           echo "TAG_BRANCH=$TAG_BRANCH" >> $GITHUB_ENV
           echo "Detected branch: $TAG_BRANCH"
-          # Branch detection only selects the APK name; always build the tagged revision.
+          # Always build the tagged revision.
+          TAG_COMMIT=$(git rev-parse HEAD)
           git checkout --detach "$TAG_COMMIT"
           git submodule update --init --recursive
 
       - name: Build release apk
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == env.ORIGINAL_PROJECT
-        env:
-          SHAFT_EVENTS_HMAC: ${{ secrets.SHAFT_EVENTS_HMAC }}
+        if: startsWith(github.ref, 'refs/tags/') && github.repository == env.RELEASE_REPOSITORY && vars.SHAFTPLUS_CI_RELEASE == 'true'
         run: ./gradlew assembleGithubRelease --stacktrace
 
       - name: Deal with release apk
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == env.ORIGINAL_PROJECT
+        if: startsWith(github.ref, 'refs/tags/') && github.repository == env.RELEASE_REPOSITORY && vars.SHAFTPLUS_CI_RELEASE == 'true'
         run: |
           cp app/build/outputs/apk/github/release/app-github-release.apk app-release.apk
           if [ "$TAG_BRANCH" = "classic" ]; then
-            APK_NAME="PixShaft_${VERSION_TAG_SHORT}_classic.apk"
+            APK_NAME="ShaftPlus_${VERSION_TAG_SHORT}_arm64.apk"
           else
-            APK_NAME="PixShaft_${VERSION_TAG_SHORT}.apk"
+            APK_NAME="ShaftPlus_${VERSION_TAG_SHORT}_arm64.apk"
           fi
           cp app-release.apk "$APK_NAME"
           echo "APK_NAME=$APK_NAME" >> $GITHUB_ENV
@@ -293,7 +251,7 @@ jobs:
           echo "APK_SHA256=$sha256" >> $GITHUB_ENV
 
       - name: Prepare release notes
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == env.ORIGINAL_PROJECT
+        if: startsWith(github.ref, 'refs/tags/') && github.repository == env.RELEASE_REPOSITORY && vars.SHAFTPLUS_CI_RELEASE == 'true'
         run: |
           TAG_MESSAGE=$(cat /tmp/tag_message.txt)
 
@@ -308,7 +266,7 @@ jobs:
           } > release_notes.md
 
       - name: Draft release
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == env.ORIGINAL_PROJECT
+        if: startsWith(github.ref, 'refs/tags/') && github.repository == env.RELEASE_REPOSITORY && vars.SHAFTPLUS_CI_RELEASE == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.VERSION_TAG }}
@@ -316,7 +274,7 @@ jobs:
           body_path: release_notes.md
           files: |
             ${{ env.APK_NAME }}
-          draft: false
+          draft: true
           prerelease: false
           # 4.9.4 按发布要求保留现有 Latest，其他版本沿用自动标记。
           make_latest: ${{ github.ref_name != 'v4.9.4' }}

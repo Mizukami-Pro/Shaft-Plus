@@ -388,6 +388,8 @@ class NovelReaderV3Fragment : Fragment(R.layout.fragment_novel_reader_v3),
                 }
             }
         }
+        // 一键翻译（#T6）：不再只藏在顶栏「更多」菜单里。
+        bb.onTranslateClick = { handleTranslateButtonClick() }
         bb.onSeekCommit = { pageIndex -> rv.goToPage(pageIndex, animate = false) }
         bb.onScrollSeekCommit = { fraction ->
             scrollReaderView?.takeIf { it.visibility == View.VISIBLE }?.scrollToFraction(fraction)
@@ -686,6 +688,8 @@ class NovelReaderV3Fragment : Fragment(R.layout.fragment_novel_reader_v3),
         }
         var lastTranslationState: NovelReaderV3ViewModel.TranslationState? = null
         viewModel.translationState.observe(viewLifecycleOwner) { state ->
+            // 底栏「翻译」按钮的状态/进度始终跟着翻译状态走（含翻译中逐批进度）。
+            updateTranslateButton(bb)
             // 只对本次 observe 期间发生的「翻译中 → 结束」提示；重建 view 时回放的旧状态不重复弹。
             val wasRunning = lastTranslationState is NovelReaderV3ViewModel.TranslationState.Running
             lastTranslationState = state
@@ -1041,6 +1045,55 @@ class NovelReaderV3Fragment : Fragment(R.layout.fragment_novel_reader_v3),
         }
         Toaster.showShort(getString(R.string.msg_reader_translate_started))
         viewModel.startBodyTranslation()
+    }
+
+    /**
+     * 底栏「翻译」一键入口（#T6）。行为对齐 [addBodyTranslationItems]，但按「最省事的一步」排序：
+     * - 翻译中 → 只提示当前进度，不打断（重复点也安全，VM 里 Running 时 start 是 no-op）；
+     * - 中断 → 先给「继续翻译」/「译文显示方式」两个去向（已翻好的段落照常保留）；
+     * - 已经翻过（含切到「仅原文」）→ 直接打开译文显示方式三选一；
+     * - 从没翻过 → 一键触发全文翻译。
+     */
+    private fun handleTranslateButtonClick() {
+        when (val state = viewModel.translationState.value) {
+            is NovelReaderV3ViewModel.TranslationState.Running ->
+                Toaster.showShort(
+                    getString(R.string.reader_upgrade_translate_progress_toast, state.done, state.total),
+                )
+            is NovelReaderV3ViewModel.TranslationState.Failed -> showV3Menu {
+                item(getString(R.string.reader_translate_resume), R.drawable.ic_baseline_translate_24) {
+                    startBodyTranslation()
+                }
+                item(getString(R.string.reader_translate_display), R.drawable.ic_baseline_translate_24) {
+                    showTranslationDisplayPicker()
+                }
+            }
+            else ->
+                if (viewModel.hasBodyTranslation) {
+                    showTranslationDisplayPicker()
+                } else {
+                    startBodyTranslation()
+                }
+        }
+    }
+
+    /** 把 VM 的翻译状态映射到底栏按钮：有进度显示进度，中断/有译文走强调色。 */
+    private fun updateTranslateButton(bb: ReaderBottomBar) {
+        when (val state = viewModel.translationState.value) {
+            is NovelReaderV3ViewModel.TranslationState.Running ->
+                bb.setTranslateState(ReaderBottomBar.TranslateState.Running, state.done, state.total)
+            is NovelReaderV3ViewModel.TranslationState.Failed ->
+                bb.setTranslateState(ReaderBottomBar.TranslateState.Failed)
+            NovelReaderV3ViewModel.TranslationState.Done ->
+                bb.setTranslateState(ReaderBottomBar.TranslateState.Ready)
+            else -> bb.setTranslateState(
+                if (viewModel.hasBodyTranslation) {
+                    ReaderBottomBar.TranslateState.Ready
+                } else {
+                    ReaderBottomBar.TranslateState.Idle
+                },
+            )
+        }
     }
 
     /** 阅读器自身的菜单项（书签 / 保存位置 / 追更 / 导出），由 [showTopMoreMenu] 两个分支共用。 */

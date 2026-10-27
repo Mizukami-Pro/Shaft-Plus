@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  「全收藏分类 · 标签详情页」的筛选面板（AllBookmarkTagFilterSheet）。
+
+  版式对齐 V3 搜索筛选器（dialog_search_filter_v3.xml / dialog_search_filter_other.xml）：
+  顶栏标题 → 可滚动的两段设置卡（投稿期间 / 喜欢！数 / users入り / 长宽比 / 分辨率 / 页数；
+  其他条件：AI 作品 / R-18 限制）→ 底部「重置 + 完成」。
+  行的本体复用 @layout/cell_search_filter_row（标题左 / 值右 / chevron），
+  `android:tag="v3_card"` 的卡片由 V3BottomSheetBase 重排成 MD3-E 分段分组。
+
+  ⚠️ 本页会被 AppCompat 宿主（TemplateActivity）加载，但 sheet 自带 V3 Material 主题覆盖，
+  与搜索筛选面板同源，所以这里的组件限制与它一致。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_v3_sheet_top"
+    android:orientation="vertical">
+
+    <!-- 顶栏：只放标题。sheet 是「选择即生效」，关闭动作收在底部（重置 / 完成）与手势/返回键。 -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp">
+
+        <TextView
+            android:id="@+id/top_title"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="@string/all_bookmark_tag_detail_filter_title"
+            android:textColor="@color/v3_text_1"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingStart="14dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ── A 段：作品条件 ── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_v3_settings_card"
+                android:clipToOutline="true"
+                android:orientation="vertical"
+                android:tag="v3_card">
+
+                <include
+                    android:id="@+id/row_duration"
+                    layout="@layout/cell_search_filter_row" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="18dp"
+                    android:background="@color/v3_border_2" />
+
+                <include
+                    android:id="@+id/row_bookmark"
+                    layout="@layout/cell_search_filter_row" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="18dp"
+                    android:background="@color/v3_border_2" />
+
+                <include
+                    android:id="@+id/row_keyword_bookmark"
+                    layout="@layout/cell_search_filter_row" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="18dp"
+                    android:background="@color/v3_border_2" />
+
+                <include
+                    android:id="@+id/row_ratio"
+                    layout="@layout/cell_search_filter_row" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="18dp"
+                    android:background="@color/v3_border_2" />
+
+                <include
+                    android:id="@+id/row_resolution"
+                    layout="@layout/cell_search_filter_row" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="18dp"
+                    android:background="@color/v3_border_2" />
+
+                <include
+                    android:id="@+id/row_pages"
+                    layout="@layout/cell_search_filter_row" />
+            </LinearLayout>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="20dp" />
+
+            <!-- ── B 段：其他条件（不含「过滤已收藏」——本页看的本来就是自己的收藏） ── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_v3_settings_card"
+                android:clipToOutline="true"
+                android:orientation="vertical"
+                android:tag="v3_card">
+
+                <include
+                    android:id="@+id/row_ai"
+                    layout="@layout/cell_search_filter_row" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="18dp"
+                    android:background="@color/v3_border_2" />
+
+                <include
+                    android:id="@+id/row_age"
+                    layout="@layout/cell_search_filter_row" />
+            </LinearLayout>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="20dp" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- 底栏：重置（次级胶囊，不动顶部 chips / 搜索框）+ 完成（实色胶囊，选择即生效，直接关） -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="20dp">
+
+        <TextView
+            android:id="@+id/btn_reset"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/bg_v3_pill_secondary"
+            android:gravity="center"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:text="@string/all_bookmark_tag_detail_filter_reset"
+            android:textColor="@color/v3_text_1"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <Space
+            android:layout_width="12dp"
+            android:layout_height="1dp" />
+
+        <TextView
+            android:id="@+id/btn_done"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/bg_v3_pill_primary"
+            android:gravity="center"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:text="@string/all_bookmark_tag_detail_filter_done"
+            android:textColor="@color/always_white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>

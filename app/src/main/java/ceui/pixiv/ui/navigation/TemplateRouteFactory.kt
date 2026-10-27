@@ -626,6 +626,45 @@ object TemplateRouteFactory {
                                 ),
                         )
                 }
+            // 全收藏分类：总览（标签聚合）与某个标签下的作品列表。页面本体在
+            // ceui.pixiv.ui.tagbrowse 包；这里只做路由接线。
+            //
+            // 演示数据开关（仅 debug 生效，release 永远关闭）：从 adb 启动时带
+            // `--ez all_bookmark_demo true` 即可用内置假数据在无 pixiv 登录的模拟器上
+            // 验收「全收藏分类」页面与海报。语义是 sticky（只开不关），所以详情页是新
+            // Activity/新 Intent 也能继续用演示数据；不带的普通启动路径完全不受影响。
+            TemplateRoute.ALL_BOOKMARK_TAGS -> {
+                ceui.pixiv.db.mirror.AllBookmarkDemoData.enableFromIntent(intent)
+                ceui.pixiv.ui.tagbrowse.AllBookmarkTagOverviewFragment()
+            }
+            TemplateRoute.ALL_BOOKMARK_TAG_DETAIL -> {
+                ceui.pixiv.db.mirror.AllBookmarkDemoData.enableFromIntent(intent)
+                ceui.pixiv.ui.tagbrowse.AllBookmarkTagDetailFragment().apply {
+                    arguments =
+                        bundleOf(
+                            ceui.pixiv.ui.tagbrowse.TagBrowseContracts.EXTRA_TAG_NAME to
+                                intent.getStringExtra(
+                                    ceui.pixiv.ui.tagbrowse.TagBrowseContracts.EXTRA_TAG_NAME
+                                ),
+                            ceui.pixiv.ui.tagbrowse.TagBrowseContracts.EXTRA_TAG_TRANSLATED_NAME to
+                                intent.getStringExtra(
+                                    ceui.pixiv.ui.tagbrowse.TagBrowseContracts
+                                        .EXTRA_TAG_TRANSLATED_NAME
+                                ),
+                            ceui.pixiv.ui.tagbrowse.TagBrowseContracts.EXTRA_TAG_COUNT to
+                                intent.getIntExtra(
+                                    ceui.pixiv.ui.tagbrowse.TagBrowseContracts.EXTRA_TAG_COUNT,
+                                    0,
+                                ),
+                            ceui.pixiv.ui.tagbrowse.TagBrowseContracts.EXTRA_INCLUDE_PRIVATE to
+                                intent.getBooleanExtra(
+                                    ceui.pixiv.ui.tagbrowse.TagBrowseContracts
+                                        .EXTRA_INCLUDE_PRIVATE,
+                                    true,
+                                ),
+                        )
+                }
+            }
             TemplateRoute.SNAPSHOT_COMMENTS ->
                 CommentsFragment().apply {
                     arguments =

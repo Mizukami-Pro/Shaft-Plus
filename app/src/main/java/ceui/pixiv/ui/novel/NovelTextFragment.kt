@@ -55,7 +55,6 @@ import ceui.pixiv.ui.novel.reader.ui.ExportSheet
 import ceui.pixiv.ui.user.UserActionReceiver
 import ceui.pixiv.utils.ppppx
 import ceui.pixiv.utils.setOnClick
-import ceui.pixiv.widgets.RateAppManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

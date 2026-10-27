@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- 海报预览浮层：跟随 V3 弹窗表面色，深色模式下与海报底色自然过渡。 -->
+    <solid android:color="@color/v3_menu_bg" />
+    <corners android:radius="28dp" />
+    <stroke
+        android:width="0.5dp"
+        android:color="@color/v3_border_2" />
+</shape>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  阅读/查看体验升级(详情页原图一键切换 + 小说阅读器一键翻译)的新增文案。
+  刻意不写进 values/strings.xml:改动面收敛在本文件,T6 独占。
+  已有文案(如 reader_translate_*、msg_reader_translate_*)仍复用 strings.xml,不重复定义。
+-->
+<resources>
+
+    <!-- ===== 需求一:插画/漫画详情页「预览图 / 原图(完整分辨率)」一键切换 ===== -->
+    <!-- 图片区常驻 chip。文案按「点一下会发生什么」写,当前状态另由 toast / contentDescription 说明。 -->
+    <string name="detail_original_chip_show">查看原图</string>
+    <string name="detail_original_chip_shown">返回预览</string>
+    <string name="detail_original_chip_desc_off">当前显示预览图，点击切换为完整分辨率原图</string>
+    <string name="detail_original_chip_desc_on">当前显示原图，点击返回预览图</string>
+    <string name="detail_original_toast_on">已切换为原图（完整分辨率）</string>
+    <string name="detail_original_toast_off">已切换为预览图（加载更快、省流量）</string>
+    <!-- 溢出菜单里原有「显示原图」项:随当前模式动态改标题,点它同样是一键切换。 -->
+    <string name="detail_original_menu_show">显示原图（完整分辨率）</string>
+    <string name="detail_original_menu_hide">恢复预览图</string>
+
+    <!-- ===== 设置页「详情页直接加载原图」开关说明(需求一配套文案) ===== -->
+    <string name="settings_original_preview_title">详情页直接加载完整分辨率原图</string>
+    <string name="settings_original_preview_desc">开启后，插画/漫画详情页默认加载原图；关闭时仍可在详情页图片区一键切换「查看原图 / 返回预览」。两处同步生效。</string>
+
+    <!-- ===== 需求二:小说阅读器底部栏「一键翻译」按钮 ===== -->
+    <string name="reader_upgrade_translate_btn">翻译</string>
+    <string name="reader_upgrade_translate_running">翻译中</string>
+    <string name="reader_upgrade_translate_progress">翻译中 %1$d%%</string>
+    <string name="reader_upgrade_translate_ready">译文</string>
+    <string name="reader_upgrade_translate_failed">继续翻译</string>
+    <string name="reader_upgrade_translate_progress_toast">正在翻译全文（已完成 %1$d/%2$d 段），完成后可切到「译文显示方式」</string>
+
+</resources>

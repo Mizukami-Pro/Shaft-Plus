@@ -1,87 +1,27 @@
-# Shaft (サードパーティPixivクライアント)
-[![release](https://img.shields.io/github/v/release/CeuiLiSA/Pixiv-Shaft)](https://github.com/CeuiLiSA/Pixiv-Shaft/releases/latest)
-[![build status](https://img.shields.io/github/workflow/status/CeuiLiSA/Pixiv-Shaft/CI)](https://github.com/CeuiLiSA/Pixiv-Shaft/actions)
-[![open issues](https://img.shields.io/github/issues/CeuiLiSA/Pixiv-Shaft?color=brightgreen)](https://github.com/CeuiLiSA/Pixiv-Shaft/issues?q=is%3Aopen+is%3Aissue)
-[![license](https://img.shields.io/github/license/CeuiLiSA/Pixiv-Shaft)](https://github.com/CeuiLiSA/Pixiv-Shaft/blob/master/LICENSE)
+# shaft+
 
-[English](../README.md) | [简体中文](./README.zh-CN.md) | **日本語**
+[CeuiLiSA/Pixiv-Shaft](https://github.com/CeuiLiSA/Pixiv-Shaft) の classic 4.9.7 を基に、いくつかの機能を追加した独立コミュニティ fork です。元の **GPL-2.0** ライセンスを維持します。
 
-* このアプリは日本のイラスト特化型SNS「Pixiv」の非公式Androidクライアントです。
-* このプロジェクトはオープンソースであり、当アプリを商業目的で使用することにより発生する責任に関し、一切の責任を負いません。
-* アプリ内のすべてのイラスト、漫画、小説の著作権は作者またはPixivに帰属します。
-* このアプリは非公式のものです。可能な限り公式のPixivアプリを使用することをお勧めします。
+[APK のダウンロード](https://github.com/Mizukami-Pro/Shaft-Plus/releases) · [ホーム](../README.md) · [简体中文](README.zh-CN.md)
 
-## 1.機能
+## 追加機能
 
-* ログインと会員登録
-* アプリ内VPN（詳しくは[Pix-EzViewer](https://github.com/Notsfsssf/Pix-EzViewer)をご確認ください）
-* 非ログインでの人気順表示
-* GIFの表示・保存
-* 閲覧履歴の表示と保存
-* マルチアカウント
-* おすすめイラスト・漫画・小説・タグの表示
-* イラスト、漫画、小説を人気順・新しい順・古い順で検索
-* コメントの閲覧・送信・返信
-* 一括ダウンロードとダウンロードリンクの表示
-* 小説の閲覧
-* Pixivision
-* R-18コンテンツの閲覧（Pixiv側での設定が必要）
-* スパムコメントのフィルタリング(初期状態では無効)
-* ダークモード
+- イラスト・漫画・うごイラ・小説を横断するブックマークタグ分類と検索。非公開ブックマークの切り替えにも対応。
+- 投稿日の新しい順・古い順、ブックマーク数、閲覧数、ブックマーク速度による並べ替え。
+- TOP 6 / TOP 20 のタグランキングポスター。アカウントとアバターの表示を選択し、保存・共有。
+- タグ詳細の投稿日、ブックマーク数、users入り、AI、R18、縦横比、解像度、ページ数、作品種類フィルター。
+- プレビュー画像とオリジナル解像度の切り替え。
+- 小説リーダーの翻訳ショートカット。
+- アプリストア評価ダイアログの削除。
 
-## 2.特徴
+## インストール
 
-* 様々なクライアントの「いいとこ取り」をした使いやすいUI
-* 「人気順」表示
-* スムーズなアニメーション
-* 操作が簡単
-* 小説の閲覧に対応
-* 多言語対応
+Android 7.0 以上、現在の APK は arm64-v8a 用です。表示名は **shaft+**、正式パッケージ名は `ceui.pixiv.shaftplus`。専用の署名を使用し、元のアプリと共存できます。元のアプリや旧 debug ビルドのデータは自動移行されません。
 
-## 3.スクリーンショット
+ローカルの release ビルド、R8、lintVital、署名検証は完了しています。実アカウントでの同期、原寸画像、翻訳結果の検証は引き続き必要です。
 
+## 帰属
 
-|イラスト表示ページ|おすすめの小説|コメント欄|
-|:---:|:---:|:---:|
-|![](https://github.com/CeuiLiSA/Pixiv-Shaft/blob/master/snap/ja/illust.jpg)|![](https://github.com/CeuiLiSA/Pixiv-Shaft/blob/master/snap/QQ20200106-1.jpg)|![](https://github.com/CeuiLiSA/Pixiv-Shaft/blob/master/snap/ja/comment.jpg)
+元の作者・貢献者と著作権表記はソースおよび Git 履歴に保持します。ライセンス全文は [LICENSE](../LICENSE) を参照してください。
 
-
-|新着作品のタブ|イラスト表示ページ|人気のタグ|
-|:---:|:---:|:---:|
-|![](https://github.com/CeuiLiSA/Pixiv-Shaft/blob/master/snap/QQ20200106-3.jpg)|![](https://github.com/CeuiLiSA/Pixiv-Shaft/blob/master/snap/QQ20200106-4.jpg)|![](https://github.com/CeuiLiSA/Pixiv-Shaft/blob/master/snap/ja/hotTag.jpg)
-
-## 4. Google Playからダウンロード
-
-<a href="https://play.google.com/store/apps/details?id=ceui.lisa.pixiv">
-    <img
-        alt="Get it on Google Play"
-        src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png"
-        width="330"
-        height="128"
-    />
-</a>
-
-## 5. Githubからダウンロード
-
-[Releases](https://github.com/CeuiLiSA/Pixiv-Shaft/releases/latest)
-
-## 6. よくある問題とFAQ
-
-[FAQ](./FAQ.md)
-
-
-## 7. プロジェクトを支援する
-
-Shaft は無料のオープンソースで、余暇に開発・メンテナンスしています。役に立ったと感じたら、
-**Afdian（爱发电）** で開発を支援できます。
-
-### 💗 [afdian.com/a/pixshaft](https://afdian.com/a/pixshaft)
-
-支援は完全に任意です。Shaft のすべての機能は今後も無料のままです。
-スターを付ける、バグを報告する、プルリクエストを送る — どれも同じくらい助かります。
-
-### ライセンス
-
-Pixiv-Shaft は [GNU General Public License, version 2](../LICENSE) の下で公開されています。
-
-Telegram Android の `SpoilerEffect2` レンダラーとシェーダーは公式 Telegram Android ソースを使用しています。詳細は[第三者通知](../THIRD_PARTY_NOTICES.md)を参照してください。
+Pixiv、PixShaft および元の開発者との提携・関係はありません。作品の著作権は各作者または Pixiv に帰属します。任意の PixShaft ホスト型サービスの利用可能性は運営者の方針に従います。上流の署名秘密鍵や events HMAC 鍵は含まず、Firebase Analytics / Crashlytics SDK と設定は削除しています。

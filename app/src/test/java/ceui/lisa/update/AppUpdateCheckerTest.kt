@@ -80,7 +80,7 @@ class AppUpdateCheckerTest {
                 htmlUrl = "https://example.invalid/$tag",
                 assets = listOf(
                     GitHubAsset(
-                        name = "PixShaft_${tag.removePrefix("v")}_classic.apk",
+                        name = "ShaftPlus_${tag.removePrefix("v")}_arm64.apk",
                         size = 12345L,
                         downloadUrl = "https://example.invalid/$tag.apk",
                         contentType = "application/vnd.android.package-archive"

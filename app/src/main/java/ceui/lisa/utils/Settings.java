@@ -157,9 +157,6 @@ public class Settings {
     //主页显示R18
     private boolean mainViewR18 = false;
 
-    //是否启用 FIREBASE_ANALYTICS_COLLECTION
-    private boolean isFirebaseEnable = true;
-
     //是否启用 Timber 日志写入「日志文件」桶（试验性，重启生效）
     private boolean logFileEnabled = false;
 
@@ -257,7 +254,12 @@ public class Settings {
     //缩略图图片显示大图
     private boolean showLargeThumbnailImage = false;
 
-    //一级详情FragmentIllust 图片显示原图
+    //一级详情 FragmentIllust / V3 详情页是否直接加载原图（完整分辨率）
+    //
+    //这是详情页图片区「查看原图 / 返回预览」常驻开关与设置页「详情页直接加载原图」开关
+    //共用的唯一持久化来源（#T6）：两处改动都写这里并 Local.setSettings，下次进详情页、
+    //横滑到相邻作品都保持。默认 false = 预览图，与 v4.9.7 原行为一致；用户显式选择原图后
+    //才按页取原图，IllustAdapter 的懒加载 / 超大图降级 / 本地下载命中逻辑不变。
     private boolean showOriginalPreviewImage = false;
 
 
@@ -697,14 +699,6 @@ public class Settings {
         }catch (Exception e){
             return ThemeHelper.ThemeType.DEFAULT_MODE;
         }
-    }
-
-    public boolean isFirebaseEnable() {
-        return isFirebaseEnable;
-    }
-
-    public void setFirebaseEnable(boolean firebaseEnable) {
-        isFirebaseEnable = firebaseEnable;
     }
 
     public boolean isLogFileEnabled() {

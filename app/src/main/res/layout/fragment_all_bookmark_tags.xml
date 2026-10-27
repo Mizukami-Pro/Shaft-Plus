@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  「全收藏分类查看」总览页（按标签聚合登录账号收藏的全部插画 / 漫画 / 小说）。
+
+  V3 页面结构（管理 / 内容配方）：
+  - Toolbar 直接 include 全 app 统一的 toolbar_layout（AppBarOverlay + 品牌色 + 居中 18sp 标题），
+    inset 由 ceui.pixiv.ui.v3.setupV3Toolbar 接管；本布局不自绘 toolbar。
+  - 搜索框常驻（bg_v3_search_pill 22dp 大圆角玻璃面，同设置页 / 发现页搜索），标签云很长时
+    也不用滚回顶部才能搜。
+  - 「包含私密收藏」是筛选 chip（bg_bookmark_chip：选中 = 主题色实底胶囊），首次开启私密收藏时
+    下方给一行说明 —— 私密书架要单独回填一次，用户得知道为什么数字会变。
+  - 统计头 + 「已全部同步」完成状态放在列表的第 0 项（recy_all_bookmark_tag_header），随列表滚走：
+    它们解释「这份列表从哪来」，不该长期占着首屏高度；而搜索/筛选是操作，必须常驻。
+  - **同步进行中**另有常驻横幅（sync_banner）：pixiv 收藏只能从新到旧一页页翻，用户要能
+    随时看到「正在获取全部收藏 / 已同步 N 件 / 正在同步哪几本书」，并知道这是慢速安全拉取。
+    横幅只在未补齐时出现，补齐后消失，完成态由列表头用「已全部同步（N 件作品）」表达。
+  - 列表行是通栏平铺 + hairline 分隔（BottomDividerDecoration），不套卡底：标签可能上千个，
+    卡片会变成一串灰盒子。统计头自己是 22dp 主题 tint 卡片（运行时用 V3Palette.card 染色）。
+  - 空态 / 加载态 / 未登录 / 镜像关闭都有独立呈现：列表区居中一套状态视图，「未登录 / 镜像关闭」
+    用整页状态页（page_state_view），绝不白屏。
+
+  ⚠️ 本布局被 AppCompat 宿主（TemplateActivity）加载，不能用 Material3 组件（缺 M3 attrs 会崩）；
+  进度条用原生 ProgressBar，动作按钮是 TextView + shape drawable，颜色由 Fragment 用 V3Palette
+  在运行时注入（含 onPrimary 文字色与强调色 tint）。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/v3_bg"
+    android:orientation="vertical">
+
+    <include layout="@layout/toolbar_layout" />
+
+    <FrameLayout
+        android:id="@+id/page_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- 可用态（已登录 + 镜像已开启）：搜索 / 筛选 / 标签列表 -->
+        <LinearLayout
+            android:id="@+id/content_column"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <!-- 搜索：hint 与清空按钮都是「数据已从本地镜像读出来」之后才可用，见 Fragment.render -->
+            <LinearLayout
+                android:id="@+id/search_bar"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/bg_v3_search_pill"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="14dp"
+                android:paddingEnd="6dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_search_black_24dp"
+                    android:tint="@color/v3_text_3" />
+
+                <EditText
+                    android:id="@+id/search_input"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:hint="@string/tag_browse_search_hint"
+                    android:imeOptions="actionSearch"
+                    android:importantForAutofill="no"
+                    android:inputType="text"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="8dp"
+                    android:singleLine="true"
+                    android:textColor="@color/v3_text_1"
+                    android:textColorHint="@color/v3_text_3"
+                    android:textSize="15sp" />
+
+                <ImageButton
+                    android:id="@+id/search_clear"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/tag_browse_search_clear"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_clear_search"
+                    android:visibility="gone"
+                    app:tint="@color/v3_text_3" />
+            </LinearLayout>
+
+            <!-- 筛选行 + 私密收藏首次同步说明 -->
+            <LinearLayout
+                android:id="@+id/filter_block"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="16dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/include_private_chip"
+                    style="@style/textMontserratSemiBold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_bookmark_chip"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:minHeight="36dp"
+                    android:paddingStart="14dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="8dp"
+                    android:text="@string/tag_browse_include_private"
+                    android:textColor="@color/bookmark_chip_text"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/private_sync_hint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:lineSpacingMultiplier="1.3"
+                    android:text="@string/tag_browse_private_first_sync"
+                    android:textColor="@color/v3_text_2"
+                    android:textSize="12sp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+            </LinearLayout>
+
+            <!--
+              后台同步横幅：**只在还没补齐时出现**（补齐后整块消失，统计头里换成「已全部同步（N 件作品）」）。
+
+              pixiv 的收藏列表只能从新到旧一页页翻，几万条收藏是小时级的活；本页把它做成
+              「边拉边看」而不是「等转圈」：横幅说明正在获取全部收藏、已同步多少件、
+              正在同步哪几本书架，并明确告知这是慢速安全拉取（避免触发 pixiv 限流），
+              同时给「立即刷新」——用户等得不耐烦时随时可以自己去催一次。
+              标签列表在后台写入的同时自动刷新，搜索只过滤已加载的部分，不会被同步卡住。
+            -->
+            <LinearLayout
+                android:id="@+id/sync_banner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/bg_v3_surface"
+                android:orientation="vertical"
+                android:paddingStart="14dp"
+                android:paddingTop="12dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="12dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ProgressBar
+                        android:id="@+id/sync_spinner"
+                        style="?android:attr/progressBarStyleSmall"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="10dp" />
+
+                    <TextView
+                        android:id="@+id/sync_title"
+                        style="@style/textMontserratSemiBold"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:includeFontPadding="false"
+                        android:text="@string/tag_browse_sync_fetching_title"
+                        android:textColor="@color/v3_text_1"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/sync_now_action"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:minHeight="48dp"
+                        android:minWidth="48dp"
+                        android:paddingStart="16dp"
+                        android:paddingTop="8dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="8dp"
+                        android:text="@string/tag_browse_sync_action"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/sync_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:includeFontPadding="false"
+                    android:lineSpacingMultiplier="1.3"
+                    android:textColor="@color/v3_text_2"
+                    android:textSize="12sp"
+                    tools:text="已同步 1,860 件 · 插画（公开）、小说（公开）正在同步" />
+
+                <TextView
+                    android:id="@+id/sync_note"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:includeFontPadding="false"
+                    android:lineSpacingMultiplier="1.3"
+                    android:text="@string/tag_browse_sync_safe_note"
+                    android:textColor="@color/v3_text_2"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+                android:id="@+id/refresh_layout"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="6dp"
+                android:layout_weight="1">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/tag_list"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:clipToPadding="false"
+                        android:overScrollMode="never"
+                        android:paddingBottom="24dp"
+                        android:scrollbars="none" />
+
+                    <!-- 列表区空态：加载 / 搜索无结果 / 同步中无标签 / 真的一件没收藏 -->
+                    <LinearLayout
+                        android:id="@+id/state_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="32dp"
+                        android:layout_marginEnd="32dp"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <ProgressBar
+                            android:id="@+id/state_loading"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:visibility="gone" />
+
+                        <ImageView
+                            android:id="@+id/state_icon"
+                            android:layout_width="88dp"
+                            android:layout_height="88dp"
+                            android:contentDescription="@null"
+                            android:importantForAccessibility="no"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_tag_browse_empty"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/state_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center"
+                            android:lineSpacingMultiplier="1.4"
+                            android:textColor="@color/v3_text_2"
+                            android:textSize="14sp"
+                            tools:text="正在读取本地标签…" />
+
+                        <!-- 动作胶囊：颜色（主题实底 + onPrimary 文字）由 Fragment 注入。
+                             隐藏时用 GONE，避免空占位把状态视图顶高。 -->
+                        <TextView
+                            android:id="@+id/state_action"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="20dp"
+                            android:background="@drawable/bg_v3_button_primary"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:minHeight="48dp"
+                            android:minWidth="112dp"
+                            android:paddingStart="24dp"
+                            android:paddingTop="12dp"
+                            android:paddingEnd="24dp"
+                            android:paddingBottom="12dp"
+                            android:textColor="@android:color/white"
+                            android:textSize="14sp"
+                            android:visibility="gone"
+                            tools:text="重试"
+                            tools:visibility="visible" />
+                    </LinearLayout>
+                </FrameLayout>
+            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        </LinearLayout>
+
+        <!-- 不可用态（未登录 / 收藏镜像开关关闭）：整页状态 + 唯一主操作，不白屏 -->
+        <LinearLayout
+            android:id="@+id/page_state_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/v3_bg"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp"
+            android:visibility="gone"
+            tools:visibility="gone">
+
+            <ImageView
+                android:id="@+id/page_state_icon"
+                android:layout_width="88dp"
+                android:layout_height="88dp"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_tag_browse_empty" />
+
+            <TextView
+                android:id="@+id/page_state_title"
+                style="@style/textMontserratBold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:textColor="@color/v3_text_1"
+                android:textSize="18sp"
+                tools:text="登录后查看全收藏分类" />
+
+            <TextView
+                android:id="@+id/page_state_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:lineSpacingMultiplier="1.4"
+                android:textColor="@color/v3_text_2"
+                android:textSize="14sp"
+                tools:text="自动汇总你收藏的全部插画、漫画与小说，按作品标签分类。" />
+
+            <TextView
+                android:id="@+id/page_state_action"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_v3_button_primary"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minHeight="48dp"
+                android:minWidth="120dp"
+                android:paddingStart="24dp"
+                android:paddingTop="12dp"
+                android:paddingEnd="24dp"
+                android:paddingBottom="12dp"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                tools:text="去登录" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

@@ -3,8 +3,6 @@ package ceui.pixiv.push
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
-import android.os.Handler
-import android.os.Looper
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -16,7 +14,6 @@ import ceui.pixiv.api.Client
 import ceui.pixiv.session.SessionManager
 import ceui.pixiv.shaftapi.InAppPush
 import ceui.pixiv.shaftapi.acknowledgeInAppPush
-import ceui.pixiv.widgets.RateAppDialog
 import ceui.pixiv.witstudio.dialog.WitDialog
 import ceui.pixiv.witstudio.dialog.WitDialogAction
 import com.tencent.mmkv.MMKV
@@ -26,7 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicBoolean
 
 /** `/v1/config` 捎回来的一条推送，连同它是给哪个 uid 的。 */
@@ -58,12 +54,7 @@ object InAppPushCenter {
     private const val KEY_SEEN = "seen:"
     private const val KEY_UNACKED = "unacked:"
 
-    /** 评分框占着时最多等这么多轮（×[YIELD_INTERVAL_MS]）；之后放弃，留给下次冷启动。 */
-    private const val YIELD_MAX_ROUNDS = 30
-    private const val YIELD_INTERVAL_MS = 2_000L
-
     private val store: MMKV by lazy { MMKV.mmkvWithID(MMKV_ID) }
-    private val main = Handler(Looper.getMainLooper())
     private val flushing = AtomicBoolean(false)
     private val scope = CoroutineScope(
         SupervisorJob() + Dispatchers.IO +
@@ -78,7 +69,7 @@ object InAppPushCenter {
     @Volatile
     private var showing: Showing? = null
 
-    /** 有推送框正在显示。首页那 2 秒后的评分框靠它让路。 */
+    /** 有应用内公告正在展示。 */
     @JvmStatic
     fun isShowing(): Boolean = showing != null
 
@@ -94,10 +85,10 @@ object InAppPushCenter {
         flushPendingAcks(uid)
         // 切号窗口：拉取是按旧 uid 发的，回来时已经是另一个人了，不能把给 A 的公告弹给 B。
         val push = arrival?.takeIf { it.uid == uid }?.push ?: return
-        maybeShow(activity, uid, push, round = 0)
+        maybeShow(activity, uid, push)
     }
 
-    private fun maybeShow(activity: FragmentActivity, uid: Long, push: InAppPush, round: Int) {
+    private fun maybeShow(activity: FragmentActivity, uid: Long, push: InAppPush) {
         val id = push.id ?: return
         if (id <= 0L) return
         if (push.title.isNullOrBlank() && push.body.isNullOrBlank()) return
@@ -106,16 +97,6 @@ object InAppPushCenter {
         if (showing != null) return
         if (activity.isFinishing || activity.isDestroyed) return
         if (SessionManager.loggedInUid != uid) return
-
-        // 评分框先到了就等它走：两个框叠着谁都看不清。等不到就算了，服务端下次冷启动还会给。
-        // 弱引用：这条轮询最长挂一分钟，不能让一个已经转屏销毁的 Activity 被 Handler 拖着不放。
-        if (RateAppDialog.isShowing(activity.supportFragmentManager)) {
-            if (round < YIELD_MAX_ROUNDS) {
-                val ref = WeakReference(activity)
-                main.postDelayed({ ref.get()?.let { maybeShow(it, uid, push, round + 1) } }, YIELD_INTERVAL_MS)
-            }
-            return
-        }
 
         val dialog = try {
             buildDialog(activity, push)

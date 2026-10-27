@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    English strings for the "All Favorites" tag overview page.
+    Keys mirror values/strings_tag_browse.xml; locales without a translation fall back to the
+    Simplified Chinese defaults (the app ships zh-CN as the base language).
+-->
+<resources>
+    <string name="tag_browse_entry">All Favorites</string>
+    <string name="tag_browse_title">All Favorites</string>
+
+    <string name="tag_browse_poster_entry">My Top Tags</string>
+    <string name="tag_browse_poster_not_ready">Tags are still loading. Try again in a moment.</string>
+    <string name="tag_browse_poster_unavailable">Preparing data for the current collection range. Try again shortly.</string>
+
+    <string name="tag_browse_stat_total_unit">bookmarks</string>
+    <string name="tag_browse_stat_types">Illust %1$s · Manga %2$s · Novels %3$s</string>
+    <string name="tag_browse_stat_tags">%1$s tags · sorted by bookmark count</string>
+    <string name="tag_browse_count_unit">works</string>
+
+    <string name="tag_browse_sync_syncing">Syncing in background · %1$s bookmarks synced</string>
+    <string name="tag_browse_sync_fetching_title">Fetching all of your bookmarks…</string>
+    <string name="tag_browse_sync_fetching_detail">%1$s bookmarks synced · syncing %2$s</string>
+    <string name="tag_browse_sync_fetching_unknown">%1$s bookmarks synced · preparing shelves…</string>
+    <string name="tag_browse_sync_safe_note">Fetched slowly in the background to avoid pixiv rate limits; tags will keep appearing, and you can search what is already synced.</string>
+    <string name="tag_browse_sync_action">Refresh now</string>
+    <string name="tag_browse_sync_header_syncing">Syncing in background</string>
+    <string name="tag_browse_sync_done_count">All synced (%1$s works)</string>
+    <string name="tag_browse_sync_cooldown_title">Sync paused (pixiv rate limit)</string>
+    <string name="tag_browse_sync_cooldown">Rate-limited by pixiv; will resume later</string>
+    <string name="tag_browse_sync_preparing">Preparing to sync…</string>
+    <string name="tag_browse_sync_done">All synced</string>
+    <string name="tag_browse_sync_refresh">Sync bookmarks now</string>
+    <string name="tag_browse_sync_started">Started syncing bookmarks</string>
+
+    <string name="tag_browse_shelf_illust_public">Illust (public)</string>
+    <string name="tag_browse_shelf_illust_private">Illust (private)</string>
+    <string name="tag_browse_shelf_novel_public">Novels (public)</string>
+    <string name="tag_browse_shelf_novel_private">Novels (private)</string>
+
+    <string name="tag_browse_include_private">Include private bookmarks</string>
+    <string name="tag_browse_private_first_sync">Private bookmarks are synced in the background the first time you enable this; the list refreshes when done.</string>
+
+    <string name="tag_browse_search_hint">Search tags or translated names</string>
+    <string name="tag_browse_search_clear">Clear search</string>
+
+    <string name="tag_browse_row_title">#%1$s</string>
+    <string name="tag_browse_row_description">%1$s, %2$s works</string>
+
+    <string name="tag_browse_loading">Reading local tags…</string>
+    <string name="tag_browse_loading_syncing">Fetching all of your bookmarks (%1$s synced)…\nTags will keep appearing; you can browse or search what is already synced.</string>
+    <string name="tag_browse_loading_fetching">Fetching all of your bookmarks…\nTags will keep appearing; you can browse or search what is already synced.</string>
+    <string name="tag_browse_empty_search">No tags match “%1$s”</string>
+    <string name="tag_browse_empty_all">No bookmarks yet</string>
+    <string name="tag_browse_empty_all_hint">No bookmarks yet\nBookmark illusts, manga, or novels on pixiv and they will be grouped by tag here.</string>
+    <string name="tag_browse_empty_no_tags">Bookmarked works have no tags yet\nTagged works will appear here once syncing finishes.</string>
+    <string name="tag_browse_load_failed">Failed to read local bookmarks. Try again later.</string>
+    <string name="tag_browse_retry">Retry</string>
+
+    <string name="tag_browse_unlogged_title">Log in to see all favorites</string>
+    <string name="tag_browse_unlogged_message">Automatically groups every illust, manga, and novel you bookmark by tag. Tap a tag to see its works.</string>
+    <string name="tag_browse_login_action">Log in</string>
+
+    <string name="tag_browse_disabled_title">Bookmark mirror is off</string>
+    <string name="tag_browse_disabled_message">\"All Favorites\" needs the bookmark mirror to collect your bookmarks in the background. Enable it in Settings and come back.</string>
+    <string name="tag_browse_disabled_action">Open settings</string>
+</resources>

@@ -14,7 +14,6 @@ import ceui.pixiv.cache.ObjectPool
 import ceui.pixiv.actionqueue.ActionRequest
 import ceui.pixiv.session.SessionManager
 import ceui.pixiv.ui.task.NovelAutoDownload
-import ceui.pixiv.widgets.RateAppManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -246,7 +245,6 @@ object PixivActions {
         autoSnapshot: Boolean,
     ) {
         writeIllustBookmarkLocally(illustId, bookmark, illust)
-        if (bookmark) RateAppManager.onUserEngaged()
 
         actionQueue.enqueue(
             ActionRequest(
@@ -294,7 +292,6 @@ object PixivActions {
     fun bookmarkIllustWithTags(illustId: Long, restrict: String, tags: List<String>) {
         writeIllustBookmarkLocally(illustId, true)
         // 自动快照统一由 ActionQueue Succeeded 事件触发。
-        RateAppManager.onUserEngaged()
         actionQueue.enqueue(
             ActionRequest(
                 type = PixivActionTypes.ILLUST_BOOKMARK,
@@ -334,7 +331,6 @@ object PixivActions {
     fun bookmarkNovelWithTags(novelId: Long, restrict: String, tags: List<String>) {
         val pooled = ObjectPool.get<Novel>(novelId).value
         writeNovelBookmarkLocally(novelId, true)
-        RateAppManager.onUserEngaged()
         actionQueue.enqueue(
             ActionRequest(
                 type = PixivActionTypes.NOVEL_BOOKMARK,
@@ -371,8 +367,6 @@ object PixivActions {
     /** 收藏一部小说的三件事：写本地、埋 RateApp、入队。批量入口复用它绕开单点的副作用。 */
     private fun applyNovelBookmark(novel: Novel, bookmark: Boolean, restrict: String) {
         writeNovelBookmarkLocally(novel.id, bookmark, novel)
-        if (bookmark) RateAppManager.onUserEngaged()
-
         actionQueue.enqueue(
             ActionRequest(
                 type = PixivActionTypes.NOVEL_BOOKMARK,
@@ -409,7 +403,6 @@ object PixivActions {
         // 先落可见性，再落关注态 —— 后者会同步通知 UI 重绘，那时前者必须已经就位。
         FollowVisibility.writeLocal(userId, restrict.takeIf { follow })
         writeUserFollowLocally(userId, follow, restrict)
-        if (follow) RateAppManager.onUserEngaged()
 
         actionQueue.enqueue(
             ActionRequest(

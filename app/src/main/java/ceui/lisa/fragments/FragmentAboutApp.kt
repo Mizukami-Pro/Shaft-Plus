@@ -78,14 +78,6 @@ class FragmentAboutApp : BaseLazyFragment<FragmentAboutBinding>() {
                 startActivity(intent)
             }
 
-            baseBind.rateThisApp.setOnClickListener {
-                try {
-                    timber.log.Timber.d("RateThisApp clicked, showing RateAppDialog")
-                    ceui.pixiv.widgets.RateAppDialog().show(parentFragmentManager, "RateAppDialog")
-                } catch (e: Exception) {
-                    timber.log.Timber.e(e, "Failed to show RateAppDialog")
-                }
-            }
             baseBind.applicationId.text = requireContext().applicationInfo.packageName
             baseBind.goWeibo.setOnClickListener {
                 val intent = Intent(Intent.ACTION_VIEW)
@@ -182,7 +174,7 @@ class FragmentAboutApp : BaseLazyFragment<FragmentAboutBinding>() {
                 val intent = Intent(Intent.ACTION_VIEW)
                 intent.addCategory(Intent.CATEGORY_DEFAULT)
                 intent.addCategory(Intent.CATEGORY_BROWSABLE)
-                intent.data = Uri.parse("https://github.com/CeuiLiSA/Pixiv-Shaft")
+                intent.data = Uri.parse("https://github.com/Mizukami-Pro/Shaft-Plus")
                 try {
                     startActivity(intent)
                 } catch (e: ActivityNotFoundException) {

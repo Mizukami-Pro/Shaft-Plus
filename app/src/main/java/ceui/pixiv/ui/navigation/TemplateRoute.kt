@@ -160,6 +160,12 @@ enum class TemplateRoute(@JvmField val key: String) {
     SNAPSHOT_VIEW("快照查看"),
     SNAPSHOT_VIEW_CLASSIC("快照经典查看"),
     SNAPSHOT_COMMENTS("快照评论"),
+
+    /** 全收藏分类查看：把登录账号收藏的全部插画/漫画/小说按作品标签聚合。 */
+    ALL_BOOKMARK_TAGS("全收藏分类查看"),
+
+    /** 「全收藏分类」里某个标签下的全部收藏作品（插画/漫画/小说混排）。 */
+    ALL_BOOKMARK_TAG_DETAIL("标签收藏作品"),
     ;
 
     companion object {

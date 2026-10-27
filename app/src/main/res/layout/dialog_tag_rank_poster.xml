@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <!-- 预览面板：深色底 + 圆角，把海报当成一张卡片摆在浮层中央。 -->
+    <LinearLayout
+        android:id="@+id/tag_poster_panel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_tag_poster_panel"
+        android:clipToOutline="true"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="2dp">
+
+            <TextView
+                android:id="@+id/tag_poster_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:includeFontPadding="false"
+                android:text="@string/tag_poster_dialog_title"
+                android:textColor="@color/v3_text_1"
+                android:textSize="19sp"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/tag_poster_close"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/tag_poster_close"
+                android:padding="13dp"
+                android:src="@drawable/ic_tag_poster_close" />
+        </LinearLayout>
+
+        <!-- 预览区：fitCenter 尽量让整张海报一眼看全；生成中/失败在同一个位置互相替换。 -->
+        <FrameLayout
+            android:id="@+id/tag_poster_preview_frame"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="16dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_tag_poster_preview"
+            android:clipToOutline="true"
+            android:minHeight="220dp">
+
+            <ImageView
+                android:id="@+id/tag_poster_preview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/tag_poster_preview_description"
+                android:scaleType="fitCenter" />
+
+            <LinearLayout
+                android:id="@+id/tag_poster_loading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ProgressBar
+                    android:id="@+id/tag_poster_loading_progress"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp" />
+
+                <TextView
+                    android:id="@+id/tag_poster_loading_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/tag_poster_generating"
+                    android:textColor="@color/v3_text_2"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tag_poster_error"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:textColor="@color/v3_danger"
+                android:textSize="13sp"
+                android:visibility="gone"
+                tools:text="海报生成失败" />
+        </FrameLayout>
+
+        <!-- 排行数量：TOP 6（默认）/ TOP 20，运行时用 V3 胶囊上色，选中为实色主色。 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="2dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="2dp">
+
+            <TextView
+                android:id="@+id/tag_poster_count_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tag_poster_count_label"
+                android:textColor="@color/v3_text_2"
+                android:textSize="13sp" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/tag_poster_count_6"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:minWidth="78dp"
+                android:text="@string/tag_poster_count_6"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tag_poster_count_20"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:minWidth="78dp"
+                android:text="@string/tag_poster_count_20"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- 两个展示开关：默认都开；未登录时整组置灰。 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingTop="0dp"
+            android:paddingEnd="16dp">
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/tag_poster_switch_account"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:checked="true"
+                android:text="@string/tag_poster_show_account"
+                android:textColor="@color/v3_text_1"
+                android:textSize="14sp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/tag_poster_switch_avatar"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:checked="true"
+                android:text="@string/tag_poster_show_avatar"
+                android:textColor="@color/v3_text_1"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- 保存 / 分享：运行时用 V3 胶囊按钮填充，保证跟随主题色与按下反馈。 -->
+        <LinearLayout
+            android:id="@+id/tag_poster_actions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="14dp" />
+    </LinearLayout>
+</FrameLayout>

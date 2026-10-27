@@ -220,6 +220,8 @@ class MeFragment : Fragment(R.layout.fragment_me) {
             entries = listOf(
                 Entry(R.string.string_319, R.id.illust_star),
                 Entry(R.string.string_320, R.id.novel_star),
+                // 全收藏分类：跨插画/漫画/小说、跨公开/悄悄，按作品标签聚合全部收藏。
+                Entry(R.string.tag_browse_entry, R.id.nav_all_bookmark_tags),
                 Entry(R.string.watchlist, R.id.watchlist),
                 Entry(R.string.core_string_novel_marker, R.id.novel_markers),
                 Entry(R.string.string_321, R.id.follow_user),

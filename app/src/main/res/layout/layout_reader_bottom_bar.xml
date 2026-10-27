@@ -52,7 +52,9 @@
 
     <!--
         bottom row 权重不写死 weightSum：系列按钮 visibility=gone 时不参与权重，
-        其它 4 个按钮各占 1/4；系列按钮显示时 5 个按钮各占 1/5（自动收缩）。
+        其它 5 个按钮（目录 / 翻译 / 设置 / 主题 / 搜索）各占 1/5；系列按钮显示时 6 个按钮
+        各占 1/6（自动收缩）。「翻译」是按 #T6 新增的一键入口，文案最长，已 maxLines=1，窄屏下
+        会自己省略，不会把同行其它按钮挤出去。
     -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -107,6 +109,40 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/reader_btn_chapters"
+                android:textColor="#CCFFFFFF"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!--
+            一键翻译(T6):全文翻译原先只藏在顶栏「更多」菜单里,发现不了。
+            未翻译 → 点一下直接开翻;翻译中 → 图标/文案变强调色并显示进度;
+            已有译文 → 打开「译文显示方式」(仅原文 / 仅译文 / 原文+译文),中断时再给「继续翻译」。
+            见 ReaderBottomBar.setTranslateState / NovelReaderV3Fragment.handleTranslateButtonClick。
+        -->
+        <LinearLayout
+            android:id="@+id/btn_translate"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/img_translate"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:contentDescription="@string/reader_upgrade_translate_btn"
+                android:src="@drawable/ic_baseline_translate_24"
+                app:tint="#FFFFFF" />
+
+            <TextView
+                android:id="@+id/txt_translate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/reader_upgrade_translate_btn"
                 android:textColor="#CCFFFFFF"
                 android:textSize="12sp" />
         </LinearLayout>

@@ -3,12 +3,16 @@ package ceui.pixiv.ui.detail
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Rect
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
+import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -30,6 +34,7 @@ import ceui.lisa.adapters.ViewHolder
 import ceui.lisa.databinding.FragmentArtworkV3Binding
 import ceui.lisa.databinding.RecyIllustDetailBinding
 import ceui.lisa.utils.Common
+import ceui.lisa.utils.Local
 import ceui.lisa.utils.Params
 import ceui.lisa.utils.Settings
 import ceui.pixiv.actions.FollowVisibility
@@ -179,6 +184,24 @@ class ArtworkV3Fragment : IllustFeedFragment(R.layout.fragment_artwork_v3) {
 
     /** 宽窗口排版的作品舞台（#1087）；手机排版与快照模式为 null，作品图照旧是列表条目。 */
     private var tabletStage: ArtworkTabletStage? = null
+
+    /**
+     * 右上角悬浮胶囊行里的「预览图 / 原图(完整分辨率)」一键切换 chip（#T6）。
+     * 挂在 XML 已有的 [FragmentArtworkV3Binding.topEndPillRow]（页码浮标 / 收起胶囊同一条）里，
+     * 不新增布局文件、两个排版（手机 / sw600dp 信息栏）共用。
+     */
+    private var originalModeChip: TextView? = null
+
+    /**
+     * **手机排版**下顶部大图 adapter 当前按哪种分辨率取图（true = 原图）。值来自
+     * [Shaft.sSettings] 的 isShowOriginalPreviewImage 或本页瞬时开关；设置页改完偏好再回来
+     * / 横滑到预建好的邻页时，靠它判断要不要按新偏好重取（见 [syncOriginalModeFromSettings]）。
+     * null = 还没建过 adapter。
+     *
+     * 平板排版（作品图在 [ArtworkTabletStage] 里、列表 adapter 根本不会创建）以舞台自己的
+     * renderedOriginalMode marker 为准，本字段在平板下不参与判定（#T9）。
+     */
+    private var renderedOriginalMode: Boolean? = null
 
     private var sectionLoader: SectionLoader<ArtworkSection>? = null
     private var artistObservedUserId: Long = 0L
@@ -338,6 +361,8 @@ class ArtworkV3Fragment : IllustFeedFragment(R.layout.fragment_artwork_v3) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _chromeBind = FragmentArtworkV3Binding.bind(view)
+        // 原图切换 chip 必须在快照 early-return 之前建（快照页只是把它藏起来）。
+        installOriginalModeChip()
         _fabBarController = V3FabBarController(chromeBind.fabBar)
         setUpTabletStage()
         if (tabletStage == null) {
@@ -468,6 +493,7 @@ class ArtworkV3Fragment : IllustFeedFragment(R.layout.fragment_artwork_v3) {
             tabletStage?.bind(illust)
             syncDescSection(illust.caption, illust.title)
             muteMask?.attach(illust)
+            refreshOriginalModeChip(illust)
             val authorId = illust.user?.id ?: return@observe
             attachArtistFollowObserver(authorId)
         }
@@ -544,6 +570,8 @@ class ArtworkV3Fragment : IllustFeedFragment(R.layout.fragment_artwork_v3) {
         artworkViewModel.onPageVisible()
         artworkViewModel.refreshDownloadFab()
         refreshCachedOriginalPages()
+        // 设置页 / 经典详情页 / 相邻作品改过「详情页直接加载原图」偏好后，回来要按新偏好重取（#T6）。
+        syncOriginalModeFromSettings()
     }
 
     /**
@@ -589,6 +617,8 @@ class ArtworkV3Fragment : IllustFeedFragment(R.layout.fragment_artwork_v3) {
         pageProgressIndex = -1
         viewerViewportSynced = false
         viewerSyncedPage = -1
+        originalModeChip = null
+        renderedOriginalMode = null
         pageAdapter?.release()
         pageAdapter = null
         // 本视图生命周期内的一次性 guard 随视图销毁归零。否则同一 Fragment 实例视图重建(回退栈
@@ -654,6 +684,7 @@ class ArtworkV3Fragment : IllustFeedFragment(R.layout.fragment_artwork_v3) {
             }
         // p0 的 holder 常驻:见 IllustAdapter.setKeepPinnedPages 与 ArtworkPinnedFirstPageItem。
         adapter.setKeepPinnedPages(true)
+        renderedOriginalMode = effectiveOriginalMode()
         adapter.setPageStatusListener { position, status ->
             retryController.reportStatus(position, status)
         }
@@ -752,8 +783,10 @@ class ArtworkV3Fragment : IllustFeedFragment(R.layout.fragment_artwork_v3) {
     }
 
     /**
-     * “加载原图”：重建共享的顶层大图 adapter（isForceOriginal=true）， 并 bump 所有页面条目的 rebindTick，让外层 FeedAdapter
-     * 原地重绑。 多 P 折叠作品保留展开态，避免点一下菜单就折回第一页。
+     * 菜单里的「当前作品加载原图」：重建共享的顶层大图 adapter（isForceOriginal=true），并 bump
+     * 所有页面条目的 rebindTick，让外层 FeedAdapter 原地重绑。多 P 折叠作品保留展开态，避免点一下
+     * 菜单就折回第一页。这是**本页瞬时**开关；右上角常驻 chip 走的是持久化偏好（#T6），见
+     * [toggleOriginalMode]。
      */
     private fun applyForceOriginal() {
         // 全局已经是原图模式时，当前 adapter 本来就按 original 加载。不要为了一个等价状态
@@ -763,7 +796,105 @@ class ArtworkV3Fragment : IllustFeedFragment(R.layout.fragment_artwork_v3) {
         // 先置位再动 adapter：若首帧大图还没懒建（pageAdapter == null），
         // 后续 ensurePageAdapter() 也会带着这个开关创建，点击不丢。
         artworkViewModel.forceOriginalPreview = true
+        rebuildPagesForResolution()
+        refreshOriginalModeChip(ObjectPool.get<Illust>(illustId).value)
+    }
+
+    // ── 预览图 / 原图(完整分辨率)一键切换(#T6) ──────────────────────────────
+
+    /**
+     * 建右上角胶囊行里的「查看原图 / 返回预览」chip。
+     *
+     * 复用 XML 已有的 [FragmentArtworkV3Binding.topEndPillRow]（页码浮标 / 收起胶囊同一条）：
+     * 不新增布局、手机与 sw600dp 两种排版自动共用，也天然跟着页状态横幅下移。样式对齐同一枚
+     * 胶囊里的其它段（白色 12sp 粗体、深色半透明胶囊底由 row 提供），点击热区 ≥ 48dp 由胶囊行
+     * 的 padding 提供。
+     */
+    private fun installOriginalModeChip() {
+        if (originalModeChip != null) return
+        val chip = TextView(requireContext()).apply {
+            visibility = View.GONE
+            setTextColor(Color.WHITE)
+            textSize = 12f
+            setTypeface(typeface, Typeface.BOLD)
+            letterSpacing = 0.02f
+            gravity = Gravity.CENTER_VERTICAL
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { toggleOriginalMode() }
+            // 胶囊行整条挂着「长按看多图预览」；在原图标签上长按不该冒出预览面板，吞掉即可。
+            setOnLongClickListener { true }
+        }
+        chromeBind.topEndPillRow.addView(
+            chip,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+        originalModeChip = chip
+    }
+
+    /** 当前生效的取图模式：全局持久化偏好（设置页 / 经典详情页共用）或本页瞬时「加载原图」。 */
+    private fun effectiveOriginalMode(): Boolean =
+        Shaft.sSettings.isShowOriginalPreviewImage || artworkViewModel.forceOriginalPreview
+
+    /**
+     * 刷新 chip 的可见性 / 文案 / 强调色，并顺带刷新胶囊行显隐。
+     * 动图(ugoira)与离线快照没有可取的原图，直接隐藏。
+     */
+    private fun refreshOriginalModeChip(illust: Illust?) {
+        val chip = originalModeChip ?: return
+        if (isSnapshotMode || illust == null || illust.isGif()) {
+            chip.visibility = View.GONE
+            syncTopEndPill()
+            return
+        }
+        val showingOriginal = effectiveOriginalMode()
+        chip.visibility = View.VISIBLE
+        chip.setText(
+            if (showingOriginal) R.string.detail_original_chip_shown else R.string.detail_original_chip_show,
+        )
+        chip.contentDescription = getString(
+            if (showingOriginal) R.string.detail_original_chip_desc_on else R.string.detail_original_chip_desc_off,
+        )
+        // 已显示原图时换暖金色（胶囊底是深色半透明），不用第二套图标来表达当前状态。
+        chip.setTextColor(if (showingOriginal) ORIGINAL_CHIP_ACCENT else Color.WHITE)
+        syncTopEndPill()
+    }
+
+    /**
+     * 一键切换「预览图 / 原图(完整分辨率)」并立即按新分辨率重取。
+     *
+     * 写的是全局持久化偏好 [Shaft.sSettings] 的 isShowOriginalPreviewImage —— 设置页
+     * 「详情页直接加载原图」与经典详情页的 chip 都是同一份，所以离开再进、横滑到相邻作品都保持。
+     * 同时清掉本页瞬时的「加载原图」开关，否则关了全局还会被它顶回原图。
+     */
+    private fun toggleOriginalMode() {
+        if (isSnapshotMode) return
+        val illust = ObjectPool.get<Illust>(illustId).value ?: return
+        if (illust.isGif()) return
+        val target = !effectiveOriginalMode()
+        Shaft.sSettings.setShowOriginalPreviewImage(target)
+        Local.setSettings(Shaft.sSettings)
+        artworkViewModel.forceOriginalPreview = false
+        rebuildPagesForResolution()
+        renderedOriginalMode = target
+        Common.showToast(
+            if (target) R.string.detail_original_toast_on else R.string.detail_original_toast_off,
+        )
+        refreshOriginalModeChip(illust)
+    }
+
+    /**
+     * 按当前取图偏好重建顶部大图 adapter 并重绑所有页（翻页 / 展开态保持）。
+     *
+     * 与 [applyForceOriginal] 共用：先释放旧 adapter（回收池 / Glide 请求不堆着），再用当前偏好
+     * 懒建新的，最后 bump 所有页面条目的 rebindTick 让外层 FeedAdapter 原地重绑；平板舞台同步重取。
+     */
+    private fun rebuildPagesForResolution() {
         tabletStage?.reloadPages()
+        renderedOriginalMode = effectiveOriginalMode()
         val old = pageAdapter ?: return
         val wasExpanded = (old as? CollapsibleIllustAdapter)?.isExpanded == true
         old.release()
@@ -773,6 +904,28 @@ class ArtworkV3Fragment : IllustFeedFragment(R.layout.fragment_artwork_v3) {
             (newAdapter as? CollapsibleIllustAdapter)?.expand()
         }
         feedViewModel.updateItems<ArtworkPageItem> { it.withRebindTick(it.rebindTick + 1) }
+    }
+
+    /**
+     * 设置页 / 经典详情页把偏好改掉之后，回到本页、或横滑到预建好的邻页时按新偏好重取。
+     * 只有「实际渲染用的模式」与当前偏好不一致才重建，避免每次 onResume 都白闪一下。
+     */
+    private fun syncOriginalModeFromSettings() {
+        if (isSnapshotMode) return
+        val illust = ObjectPool.get<Illust>(illustId).value
+        // 用「生效模式」而不是只看全局设置：菜单里的瞬时「加载原图」也是生效模式的一部分，
+        // 不能因为一次 onPause/onResume 就把它悄悄清掉（那条开关原本跨旋转保留）。
+        val expected = effectiveOriginalMode()
+        val stage = tabletStage
+        if (stage != null) {
+            // 平板排版：作品图由舞台自己取，[renderedOriginalMode] 永远是 null（列表 adapter
+            // 从不创建）。让舞台按它自己记录的实际渲染模式判断；否则外部切了偏好再回来，
+            // 舞台会一直停在旧分辨率（#T9）。
+            stage.syncOriginalMode()
+        } else if (shouldReloadPagesForOriginalMode(renderedOriginalMode, expected)) {
+            rebuildPagesForResolution()
+        }
+        refreshOriginalModeChip(illust)
     }
 
     private fun openComicReader() {
@@ -1260,8 +1413,17 @@ class ArtworkV3Fragment : IllustFeedFragment(R.layout.fragment_artwork_v3) {
     private fun syncTopEndPill() {
         val hasCollapse = chromeBind.collapsePill.isVisible
         val hasProgress = chromeBind.pageProgressPill.isVisible
+        val hasOriginal = originalModeChip?.isVisible == true
+        val hasLeading = hasCollapse || hasProgress
         chromeBind.topEndPillGap.isVisible = hasCollapse && hasProgress
-        chromeBind.topEndPillRow.isVisible = (hasCollapse || hasProgress) && !muteMaskActive
+        // 原图 chip 是后加的末段:前面有内容时补 10dp 与「收起 / 页码」隔开;单独在场就不留这段空隙,
+        // 否则胶囊左内边距会比右内边距多出 10dp（与上面 Space 注释同一类不对称问题）。
+        val chip = originalModeChip
+        if (chip != null) {
+            val pad = if (hasLeading) 10.ppppx else 0
+            if (chip.paddingLeft != pad) chip.setPadding(pad, 0, 0, 0)
+        }
+        chromeBind.topEndPillRow.isVisible = (hasLeading || hasOriginal) && !muteMaskActive
     }
 
     /**
@@ -1758,6 +1920,9 @@ class ArtworkV3Fragment : IllustFeedFragment(R.layout.fragment_artwork_v3) {
 
     companion object {
         private const val FAB_ANIMATION_DURATION_MS = 200L
+
+        /** 原图模式 chip 的强调色：胶囊底是深色半透明（bg_v3_expand_pill），暖金色在深底上最醒目。 */
+        private const val ORIGINAL_CHIP_ACCENT = 0xFFFFC857.toInt()
 
         @JvmStatic
         fun newInstance(illustId: Long): ArtworkV3Fragment {

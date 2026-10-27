@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  「全收藏分类查看」标签详情页：某个标签下收藏的全部作品（插画 / 漫画 / 小说混排）。
+
+  版式沿用收藏库（fragment_bookmark_library.xml）的 feeds 独立页骨架：
+  - TopInsetLinearLayout 把状态栏 inset 吃成 paddingTop，品牌色一直铺到屏幕顶；
+  - AppBarLayout 里 Toolbar（scroll|enterAlways，随列表收起）+ 常驻的搜索框 / 排序 chip /
+    类型 chip / 命中总数；列表通过 CoordinatorLayout behavior 联动；
+  - 颜色全走 v3_*（自带 values-night），主题色靠 ?attr/colorPrimary 跟随 10 套主题。
+
+  ⚠️ 本布局被 AppCompat 宿主（TemplateActivity）加载，不能用 Material3 组件
+  （缺 M3 attrs 会崩，见 fragment_feed.xml 同款注释）。chip 是 TextView + shape drawable，
+  搜索框是原生 EditText，进度条 / 空态由 <include fragment_feed> 里的 feeds 框架承担。
+-->
+<ceui.pixiv.widgets.TopInsetLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorPrimary"
+    android:orientation="vertical">
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/coordinator"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/v3_bg">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/v3_bg"
+            android:paddingBottom="8dp"
+            app:elevation="0dp">
+
+            <!--
+              Toolbar 5 件套对齐全 app 独立页（fragment_webview / bookmark_library）：
+              AppBarOverlay + popupTheme + navigationIcon + titleTextColor + 居中标题。
+              标题两行：`#标签原名` / 译名（没有译名时副标题整行 GONE）。
+            -->
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/colorPrimary"
+                android:elevation="@dimen/six_dp"
+                android:theme="@style/AppTheme.AppBarOverlay"
+                app:layout_scrollFlags="scroll|enterAlways"
+                app:navigationIcon="@drawable/ic_arrow_back_white_shadow"
+                app:popupTheme="@style/AppTheme.PopupOverlay"
+                app:title=" "
+                app:titleTextColor="@android:color/white">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/toolbar_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:textColor="@color/always_white"
+                        android:textSize="18sp"
+                        tools:text="#初音ミク" />
+
+                    <TextView
+                        android:id="@+id/toolbar_subtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:alpha="0.8"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:textColor="@color/always_white"
+                        android:textSize="11sp"
+                        android:visibility="gone"
+                        tools:text="初音未来"
+                        tools:visibility="visible" />
+
+                </LinearLayout>
+
+            </androidx.appcompat.widget.Toolbar>
+
+            <!-- 作品内搜索：标题 / 作者 / 标签（含译名）逐词 AND，300ms 防抖后重查。 -->
+            <EditText
+                android:id="@+id/search_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_v3_surface"
+                android:drawableStart="@drawable/ic_search_black_24dp"
+                android:drawablePadding="10dp"
+                android:drawableTint="@color/v3_text_3"
+                android:hint="@string/all_bookmark_tag_detail_search_hint"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="13dp"
+                android:paddingBottom="13dp"
+                android:textColor="@color/v3_text_1"
+                android:textColorHint="@color/v3_text_3"
+                android:textSize="14sp"
+                tools:ignore="Autofill" />
+
+            <!--
+              作品类别小节标题行：标题左、筛选入口右对齐（**始终可见**）。
+              筛选 chip 以前挂在排序行末尾，被 5 个排序 chip 挤出屏幕（QA 实测只剩 19px），
+              用户不横滑根本看不到入口；这里放在标题行右侧，任何屏宽/字号下都在首屏可见。
+              点击打开 AllBookmarkTagFilterSheet；N>0 时文案变「筛选 · N 项」并点亮（同 chip 语汇）。
+            -->
+            <LinearLayout
+                android:id="@+id/type_label_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/type_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/all_bookmark_tag_detail_section_work_type"
+                    android:textColor="@color/v3_text_3"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/filter_chip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:background="@drawable/bg_bookmark_chip"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="7dp"
+                    android:paddingBottom="7dp"
+                    android:text="@string/search_filter_v3_entry"
+                    android:textColor="@color/bookmark_chip_text"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <!--
+              作品类别 chips：全部 / 插画 / 漫画 / 小说 / 动图，互斥单选。
+              横滑而不是折行：窄屏 + 大字号时也不会把列表挤没；clipToPadding=false 让首尾
+              chip 能滑到屏幕边缘外。
+            -->
+            <HorizontalScrollView
+                android:id="@+id/type_chip_scroll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:clipToPadding="false"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/type_chip_row"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <!-- 排序小节标题。 -->
+            <TextView
+                android:id="@+id/sort_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="10dp"
+                android:text="@string/all_bookmark_tag_detail_section_sort"
+                android:textColor="@color/v3_text_3"
+                android:textSize="12sp" />
+
+            <!-- 排序 chips：最新发布（默认）/ 最早发布 / 最多收藏 / 热度 / 趋势。 -->
+            <HorizontalScrollView
+                android:id="@+id/sort_chip_scroll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:clipToPadding="false"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/sort_chip_row"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <!-- 命中总数（「共 N 件」）。数据来自 countWorks，独立于列表分页。 -->
+            <TextView
+                android:id="@+id/count_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/v3_text_3"
+                android:textSize="12sp"
+                android:visibility="gone"
+                tools:text="共 1,284 件"
+                tools:visibility="visible" />
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <include
+                android:id="@+id/feed_root"
+                layout="@layout/fragment_feed"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </FrameLayout>
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+</ceui.pixiv.widgets.TopInsetLinearLayout>

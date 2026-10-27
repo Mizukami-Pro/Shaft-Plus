@@ -19,3 +19,9 @@ ncnn.zip
 .claude/scheduled_tasks.lock
 /keystore.jks
 /keystore.properties
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pepk
+app/src/*/google-services.json

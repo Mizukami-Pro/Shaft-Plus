@@ -11,15 +11,15 @@ class GitHubFeedParserTest {
     private val sampleAtomXml = """
         <?xml version="1.0" encoding="UTF-8"?>
         <feed xmlns="http://www.w3.org/2005/Atom">
-          <id>tag:github.com,2008:https://github.com/CeuiLiSA/Pixiv-Shaft/releases</id>
-          <link type="text/html" rel="alternate" href="https://github.com/CeuiLiSA/Pixiv-Shaft/releases"/>
-          <link type="application/atom+xml" rel="self" href="https://github.com/CeuiLiSA/Pixiv-Shaft/releases.atom"/>
+          <id>tag:github.com,2008:https://github.com/Mizukami-Pro/Shaft-Plus/releases</id>
+          <link type="text/html" rel="alternate" href="https://github.com/Mizukami-Pro/Shaft-Plus/releases"/>
+          <link type="application/atom+xml" rel="self" href="https://github.com/Mizukami-Pro/Shaft-Plus/releases.atom"/>
           <title>Release notes from Pixiv-Shaft</title>
           <updated>2026-10-08T06:47:29Z</updated>
           <entry>
             <id>tag:github.com,2008:Repository/178835117/v4.9.6</id>
             <updated>2026-10-08T07:07:59Z</updated>
-            <link rel="alternate" type="text/html" href="https://github.com/CeuiLiSA/Pixiv-Shaft/releases/tag/v4.9.6"/>
+            <link rel="alternate" type="text/html" href="https://github.com/Mizukami-Pro/Shaft-Plus/releases/tag/v4.9.6"/>
             <title>v4.9.6</title>
             <content type="html">&lt;p&gt;v4.9.6 更新日志&lt;/p&gt;
         &lt;p&gt;新功能&lt;/p&gt;
@@ -33,14 +33,14 @@ class GitHubFeedParserTest {
           <entry>
             <id>tag:github.com,2008:Repository/178835117/sticker-assets</id>
             <updated>2026-09-21T07:44:06Z</updated>
-            <link rel="alternate" type="text/html" href="https://github.com/CeuiLiSA/Pixiv-Shaft/releases/tag/sticker-assets"/>
+            <link rel="alternate" type="text/html" href="https://github.com/Mizukami-Pro/Shaft-Plus/releases/tag/sticker-assets"/>
             <title>Sticker assets / 贴纸资源</title>
             <content type="html">&lt;p&gt;资源包&lt;/p&gt;</content>
           </entry>
           <entry>
             <id>tag:github.com,2008:Repository/178835117/v4.9.5</id>
             <updated>2026-09-29T04:04:17Z</updated>
-            <link rel="alternate" type="text/html" href="https://github.com/CeuiLiSA/Pixiv-Shaft/releases/tag/v4.9.5"/>
+            <link rel="alternate" type="text/html" href="https://github.com/Mizukami-Pro/Shaft-Plus/releases/tag/v4.9.5"/>
             <title>v4.9.5</title>
             <content type="html">&lt;p&gt;日常维护与修复&lt;/p&gt;</content>
           </entry>
@@ -56,14 +56,14 @@ class GitHubFeedParserTest {
         assertEquals("v4.9.6", latest.tagName)
         assertEquals("v4.9.6", latest.name)
         assertEquals("2026-10-08T07:07:59Z", latest.publishedAt)
-        assertEquals("https://github.com/CeuiLiSA/Pixiv-Shaft/releases/tag/v4.9.6", latest.htmlUrl)
+        assertEquals("https://github.com/Mizukami-Pro/Shaft-Plus/releases/tag/v4.9.6", latest.htmlUrl)
 
         assertNotNull(latest.assets)
         assertEquals(1, latest.assets?.size)
         val asset = latest.assets!![0]
-        assertEquals("PixShaft_4.9.6_classic.apk", asset.name)
+        assertEquals("ShaftPlus_4.9.6_arm64.apk", asset.name)
         assertEquals(
-            "https://github.com/CeuiLiSA/Pixiv-Shaft/releases/download/v4.9.6/PixShaft_4.9.6_classic.apk",
+            "https://github.com/Mizukami-Pro/Shaft-Plus/releases/download/v4.9.6/ShaftPlus_4.9.6_arm64.apk",
             asset.downloadUrl
         )
 
@@ -131,9 +131,9 @@ class GitHubFeedParserTest {
         val latest = releases[0]
         val apk = AppUpdateChecker.findApkAsset(latest)
         assertNotNull(apk)
-        assertEquals("PixShaft_4.9.6_classic.apk", apk?.name)
+        assertEquals("ShaftPlus_4.9.6_arm64.apk", apk?.name)
         assertEquals(
-            "https://github.com/CeuiLiSA/Pixiv-Shaft/releases/download/v4.9.6/PixShaft_4.9.6_classic.apk",
+            "https://github.com/Mizukami-Pro/Shaft-Plus/releases/download/v4.9.6/ShaftPlus_4.9.6_arm64.apk",
             apk?.downloadUrl
         )
     }

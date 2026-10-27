@@ -171,22 +171,6 @@
                     </RelativeLayout>
 
                     <RelativeLayout
-                        android:id="@+id/rate_this_app"
-                        style="@style/M3SetRow"
-                        android:background="@drawable/wit_row_mid">
-
-                        <LinearLayout style="@style/M3SetTexts">
-
-                            <TextView
-                                style="@style/M3SetTitle"
-                                android:text="@string/string_198" />
-                        </LinearLayout>
-
-                        <TextView style="@style/M3SetArrow" />
-
-                    </RelativeLayout>
-
-                    <RelativeLayout
                         android:id="@+id/go_weibo"
                         style="@style/M3SetRow"
                         android:background="@drawable/wit_row_mid">
