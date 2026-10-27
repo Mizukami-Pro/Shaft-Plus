@@ -12,7 +12,18 @@
 - タグ詳細の投稿日、ブックマーク数、users入り、AI、R18、縦横比、解像度、ページ数、作品種類フィルター。
 - プレビュー画像とオリジナル解像度の切り替え。
 - 小説リーダーの翻訳ショートカット。
-- アプリストア評価ダイアログの削除。
+
+## 機能のプレビュー
+
+開発中のエミュレーター画面とアプリで生成したポスターです。数値・タグ・画像はデモデータで、一部の UI は英語表示です。クリックすると拡大できます。
+
+| タグ一覧 | 作品の検索と並べ替え | 詳細フィルター |
+| --- | --- | --- |
+| [<img src="../docs/images/shaftplus/collection-overview.png" width="260" alt="ブックマークタグ一覧">](../docs/images/shaftplus/collection-overview.png) | [<img src="../docs/images/shaftplus/tag-detail.png" width="260" alt="タグ内の検索と並べ替え">](../docs/images/shaftplus/tag-detail.png) | [<img src="../docs/images/shaftplus/collection-filters.png" width="260" alt="詳細フィルター">](../docs/images/shaftplus/collection-filters.png) |
+
+| TOP 6 | TOP 20 |
+| --- | --- |
+| [<img src="../docs/images/shaftplus/tag-ranking-top6.png" width="320" alt="TOP 6 タグランキング">](../docs/images/shaftplus/tag-ranking-top6.png) | [<img src="../docs/images/shaftplus/tag-ranking-top20.png" width="320" alt="TOP 20 タグランキング">](../docs/images/shaftplus/tag-ranking-top20.png) |
 
 ## インストール
 
