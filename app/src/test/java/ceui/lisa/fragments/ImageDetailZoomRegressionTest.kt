@@ -36,13 +36,19 @@ class ImageDetailZoomRegressionTest {
         override fun onCreate() = Unit // No native services or networking are needed to test gestures.
     }
 
-    private lateinit var host: ActivityController<FragmentActivity>
+    class TestHostActivity : FragmentActivity() {
+        // Each test needs its own Application rather than a factory cached by an earlier test.
+        override val defaultViewModelProviderFactory: androidx.lifecycle.ViewModelProvider.Factory
+            get() = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory(application)
+    }
+
+    private lateinit var host: ActivityController<TestHostActivity>
     private lateinit var fragment: FragmentImageDetail
     private lateinit var image: SketchZoomImageView
 
     @Before
     fun setUp() {
-        host = Robolectric.buildActivity(FragmentActivity::class.java)
+        host = Robolectric.buildActivity(TestHostActivity::class.java)
         host.get().setTheme(R.style.AppTheme)
         Utils.init(host.get().application)
         Shaft.sSettings = Settings()

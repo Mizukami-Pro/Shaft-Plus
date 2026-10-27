@@ -44,13 +44,19 @@ class ImageDetailLongPressBehaviorTest {
         override fun onCreate() = Unit
     }
 
-    private lateinit var host: ActivityController<FragmentActivity>
+    class TestHostActivity : FragmentActivity() {
+        // The default AndroidViewModelFactory singleton can retain another Robolectric Application.
+        override val defaultViewModelProviderFactory: androidx.lifecycle.ViewModelProvider.Factory
+            get() = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory(application)
+    }
+
+    private lateinit var host: ActivityController<TestHostActivity>
     private lateinit var fragment: FragmentImageDetail
     private lateinit var image: SketchZoomImageView
 
     @Before
     fun setUp() {
-        host = Robolectric.buildActivity(FragmentActivity::class.java)
+        host = Robolectric.buildActivity(TestHostActivity::class.java)
         host.get().setTheme(R.style.AppTheme)
         Utils.init(host.get().application)
         Shaft.sSettings = Settings()
